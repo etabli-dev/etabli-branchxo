@@ -156,10 +156,66 @@ clean.
 - Reanimated worklets for cell placement micro-animations — was a
   build-pass "nice to have" only; not in the spec checklist.
 
-## Final gate
+## Final gate (after original refine pass)
 
 ```bash
 npx tsc --noEmit         # exit 0
 npx eslint . --ext .ts,.tsx   # exit 0
 npx jest                       # 7 suites, 49 tests, all green
+```
+
+---
+
+# Iterative refine — Rounds 1-4 (post-runtime audit)
+
+The refine pass above was paper/test-only. After bringing the app up
+on a real iPhone 17 simulator and (when Expo Go cooperated) the Pixel
+Android emulator, four more rounds of audit + fix landed under
+`AUDIT-branchxo.md "Round 1..5"`. Summary of what changed beyond the
+initial refine:
+
+## Round 1 — runtime + safe area + chart polish
+- Added `react-native-safe-area-context@4.10.5` (matches Expo SDK 51)
+  so the brand header clears the Android status bar.
+- `ProbabilityChart`: subsampled ply ticks (every Nth + first + last)
+  so a 9-ply game's x-axis doesn't overlap; rendered per-point dots so a
+  single-point history is still visible.
+- Hid all body content until `hydrated === true` to remove the
+  empty-tree flash on cold start.
+
+## Round 2 — iOS runtime verification (no new fixes)
+- End-to-end happy path verified on the iPhone 17 simulator with
+  screenshots: board / timeline / multiverse / heat views all render;
+  fork prompt + confirm; vs-computer AI plays correctly; new game
+  resets; persistence restores tree + settings after relaunch.
+
+## Round 3 — race conditions at the human/AI boundary
+- `attemptPlay` refuses taps while `aiThinking === true` (human can't
+  steal AI's mark during the yield).
+- `attemptPlay` refuses forward taps in vs-computer mode when
+  `toMove === aiMark` (scrubbed-back forks are still allowed).
+- `triggerAiMove` re-reads state after its `setTimeout(0)` yield and
+  bails if active universe / mode / aiMark changed.
+- `confirmPendingBranch` uses fresh `get()` for mode/aiMark.
+- Heat-view `⛨` (tofu on some Android system fonts) → `◆`.
+- Cell Pressables now report `accessibilityState.disabled` when
+  occupied at the tip.
+- New tests for each (and a 50+ node tree perf test that builds and
+  invariant-checks in <2ms).
+
+## Round 4 — edge cases + per-player UX
+- `setScrubPly` clamps to `[0, fullMoves(active).length]`.
+- `BoardView` suppresses the heat overlay when it would be the AI's
+  turn in vs-computer mode (spec: "hint for the human only").
+- `SettingsPanel` in vs-computer mode shows only the human-side hint
+  toggle.
+- New tests for scrubPly clamping + multiverse summary independent
+  recount.
+
+## Final gate (after Rounds 1–4)
+
+```bash
+npx tsc --noEmit              # exit 0
+npx eslint . --ext .ts,.tsx   # exit 0
+npx jest                       # 7 suites, 56 tests, all green
 ```

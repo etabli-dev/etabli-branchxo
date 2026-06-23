@@ -181,7 +181,14 @@ export const useAppStore = create<AppState>((set, get) => {
     },
     setOverlayFlag: (mark, on) =>
       set((s) => ({ overlayFlags: { ...s.overlayFlags, [mark]: on } })),
-    setScrubPly: (p) => set({ scrubPly: Math.max(0, p) }),
+    setScrubPly: (p) => {
+      // Audit R4-P1-A: clamp scrubPly to [0, fullMoves(active).length]
+      const s = get();
+      const active = s.tree.universes[s.activeUniverseId];
+      const max = active ? fullMoves(s.tree, active.id).length : 0;
+      const clamped = Math.max(0, Math.min(p, max));
+      set({ scrubPly: clamped });
+    },
     setActiveUniverse: (id) => {
       const u = get().tree.universes[id];
       if (!u) return;

@@ -23,6 +23,8 @@ export function BoardView() {
   const overlayFlags = useAppStore((s) => s.overlayFlags);
   const overlayTopN = useAppStore((s) => s.overlayTopN);
   const attemptPlay = useAppStore((s) => s.attemptPlay);
+  const mode = useAppStore((s) => s.mode);
+  const aiMark = useAppStore((s) => s.aiMark);
 
   const active = tree.universes[activeId];
   const fullMoves = useMemo(
@@ -43,7 +45,9 @@ export function BoardView() {
 
   const atTip = scrubPly === fullMoves.length;
   const toMove = atTip && active.status.kind === 'open' ? active.status.toMove : null;
-  const overlayOn = toMove ? overlayFlags[toMove] : false;
+  // Per-player flag, AND in vs-computer mode never show hints on the AI's turn.
+  const overlayOn =
+    toMove && overlayFlags[toMove] && !(mode === 'vs-computer' && toMove === aiMark);
   const heat = overlayOn && toMove ? normalizedStrengths(displayed, toMove) : [];
   const topMoves = overlayOn && toMove ? topN(displayed, toMove, overlayTopN) : [];
 

@@ -133,6 +133,37 @@ describe('multiverse tree', () => {
     expect(s.xWins).toBe(1);
   });
 
+  it('summarize matches an independent recount over a multi-universe tree', () => {
+    let t = createInitialTree();
+    const root = t.rootId;
+    // Play X win on root: top row X with O blocking misses
+    [0, 3, 1, 4, 2].forEach((c) => {
+      t = appendMove(t, root, c as CellIndex).tree;
+    });
+    // Fork at ply 2 (O to play) → O at cell 6 instead of cell 4 → still leads to X win or O win or draw
+    const f1 = fork(t, root, 2, 6 as CellIndex);
+    t = f1.tree;
+    // Continue f1: X at 4, O at 8, X at 5 → X wins via col 5-2? not directly. Let's just play it out.
+    // Actually safer to just check the relationship holds:
+    let xWins = 0;
+    let oWins = 0;
+    let draws = 0;
+    let open = 0;
+    for (const u of Object.values(t.universes)) {
+      if (u.status.kind === 'win') {
+        if (u.status.winner === 'X') xWins++;
+        else oWins++;
+      } else if (u.status.kind === 'draw') draws++;
+      else open++;
+    }
+    const s = summarize(t);
+    expect(s.xWins).toBe(xWins);
+    expect(s.oWins).toBe(oWins);
+    expect(s.draws).toBe(draws);
+    expect(s.open).toBe(open);
+    expect(s.total).toBe(xWins + oWins + draws + open);
+  });
+
   it('pathToRoot returns chain root → leaf', () => {
     let t = createInitialTree();
     const root = t.rootId;

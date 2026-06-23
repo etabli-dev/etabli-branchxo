@@ -165,4 +165,68 @@ Gates after Round 3 fixes: tsc clean, eslint clean, jest 53/53 ✓.
 
 ---
 
-## Round 4 — see entries appended below
+## Round 4 — edge case & a11y / UX polish
+
+### Findings (Round 4)
+
+**R4-P1-A (out-of-range scrubPly)** — `setScrubPly` only clamped the lower
+bound. Passing a ply > `fullMoves(active).length` left the store in an
+inconsistent state (BoardView clamped silently when rendering, but
+`scrubPly > full.length` made `attemptPlay`'s `scrubbedBack` logic
+behave oddly).
+
+**R4-P1-F (AI overlay flicker)** — In vs-computer mode with O hints
+enabled and AI=O, the heat/top-N overlay briefly showed for the AI's
+turn between human-tap and AI-apply. Per spec: "vs-computer: hint for
+the human only."
+
+**R4-P2-D (AI-side hint toggle visible)** — In vs-computer mode, the
+SettingsPanel exposed BOTH X hints and O hints toggles. The AI side's
+toggle has no functional purpose since hints never render for the AI.
+
+### Fixes applied (Round 4)
+
+1. **R4-P1-A** — `setScrubPly` now clamps to `[0, fullMoves(active).length]`.
+2. **R4-P1-F** — `BoardView` suppresses the overlay whenever
+   `mode === 'vs-computer' && toMove === aiMark`. The flag is still
+   honored for the human side.
+3. **R4-P2-D** — `SettingsPanel` in vs-computer mode shows only the
+   human-side hint toggle and re-titles the field to
+   `Hint overlay (you play X/O)` so the player knows what flips.
+
+### New tests (Round 4)
+
+- `store: audit R4-P1-A` — `setScrubPly(999)` clamps to `fullMoves.length`;
+  `setScrubPly(-5)` clamps to `0`.
+- `multiverse: summarize matches an independent recount` — confirms
+  `summarize(tree)` exactly matches a side-by-side recount across a
+  multi-universe tree built from a root + fork.
+
+Gates after Round 4 fixes: tsc clean, eslint clean, jest 56/56 ✓.
+
+### Verification gate (Round 4)
+
+Re-ran the iOS-simulator pass after the fixes: persisted state from
+Round 2 was correctly restored on cold reload; played a full
+vs-computer game to a draw, observed the chart turning-point marker
+and correct outcome chip update (`draws 1` / `open 0`). New Game
+returned the tree to a single root universe (open chip went to 1).
+
+---
+
+## Round 5 — stop condition
+
+A final pass over the code did not surface any new P0 or P1 items:
+
+- Engine win-detect / status / replay — unit tested for all 8 lines + draws + non-wins.
+- Multiverse forking / parent prefix invariant / 50+ node performance — unit tested.
+- AI easy/medium/perfect — unit tested for win/block + perfect-vs-perfect = draw + never-loses-vs-random.
+- Store: aiThinking guard, AI turn refusal, post-yield re-check, pending-branch source-universe pin, scrubPly clamp — all unit tested.
+- Persistence: schema versioned, board re-frozen on hydrate, invariant check on hydrate.
+- UI: safe area on iOS, chart subsampling + dots, hydration guard, hint-overlay UX, heat-view tofu glyph fix.
+- Runtime: end-to-end happy path verified on the iPhone 17 simulator
+  (board / timeline / multiverse / heat views, fork prompt + confirm,
+  vs-computer game to draw, new game reset, AsyncStorage persistence).
+
+Stopping condition met: a re-audit round would not produce new P0 or
+P1 items against the spec.

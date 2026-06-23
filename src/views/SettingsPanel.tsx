@@ -69,18 +69,28 @@ export function SettingsPanel() {
         />
       </Field>
 
-      <Field label="Hint overlay (per-player)">
+      <Field
+        label={
+          mode === 'vs-computer'
+            ? `Hint overlay (you play ${aiMark === 'X' ? 'O' : 'X'})`
+            : 'Hint overlay (per-player)'
+        }
+      >
         <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-          <Toggle
-            label="X hints"
-            value={overlayFlags.X}
-            onPress={() => setOverlayFlag('X', !overlayFlags.X)}
-          />
-          <Toggle
-            label="O hints"
-            value={overlayFlags.O}
-            onPress={() => setOverlayFlag('O', !overlayFlags.O)}
-          />
+          {(mode === 'hotseat' || aiMark !== 'X') && (
+            <Toggle
+              label="X hints"
+              value={overlayFlags.X}
+              onPress={() => setOverlayFlag('X', !overlayFlags.X)}
+            />
+          )}
+          {(mode === 'hotseat' || aiMark !== 'O') && (
+            <Toggle
+              label="O hints"
+              value={overlayFlags.O}
+              onPress={() => setOverlayFlag('O', !overlayFlags.O)}
+            />
+          )}
         </View>
       </Field>
 

@@ -148,6 +148,20 @@ describe('store: cycling views never mutates the tree', () => {
   });
 });
 
+describe('audit R4-P1-A: setScrubPly is clamped to [0, fullMoves.length]', () => {
+  it('rejects out-of-range high values', () => {
+    useAppStore.getState().attemptPlay(4 as CellIndex);
+    useAppStore.getState().attemptPlay(0 as CellIndex);
+    // active universe has 2 moves; max valid scrubPly = 2
+    useAppStore.getState().setScrubPly(999);
+    expect(useAppStore.getState().scrubPly).toBe(2);
+  });
+  it('rejects out-of-range low values', () => {
+    useAppStore.getState().setScrubPly(-5);
+    expect(useAppStore.getState().scrubPly).toBe(0);
+  });
+});
+
 describe('reFreezeTree (audit P0-2)', () => {
   it('returns a tree whose boards are frozen', () => {
     const original = useAppStore.getState().tree;
