@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "branchxo",
-    "slug": "branchxo",
+    "name": "etabli-branchxo",
+    "slug": "etabli-branchxo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "branchxo",
+    "scheme": "etabli-branchxo",
     "userInterfaceStyle": "automatic",
     "runtimeVersion": {
       "policy": "appVersion"
