@@ -1,0 +1,36 @@
+project:
+  type: website
+  output-dir: _site
+
+format:
+  html:
+    theme:
+      light: [cosmo, theme/etabli.scss]
+      dark: [cosmo, theme/etabli-dark.scss]
+    toc: true
+    toc-depth: 2
+    code-copy: true
+    anchor-sections: true
+    link-external-newwindow: true
+    grid:
+      body-width: 980px
+
+website:
+  title: "établi branchxo"
+  reader-mode: true
+  back-to-top-navigation: true
+  navbar:
+    pinned: true
+    logo: assets/etabli-logo.svg
+    logo-href: index.html
+    title: false
+    right:
+      - text: "Download v0.1.0 (APK)"
+        href: "https://github.com/etabli-dev/etabli-branchxo/releases/tag/v0.1.0"
+      - icon: github
+        href: "https://github.com/etabli-dev/etabli-branchxo"
+  page-footer:
+    left: "Apache-2.0 · © 2026 R. Heller"
+    right:
+      - text: "établi suite"
+        href: "https://github.com/etabli-dev"
