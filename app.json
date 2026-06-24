@@ -2,7 +2,7 @@
   "expo": {
     "name": "etabli-branchxo",
     "slug": "etabli-branchxo",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "etabli-branchxo",
@@ -10,13 +10,19 @@
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "platforms": ["ios", "android", "web"],
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#0b1020"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.raban.branchxo",
@@ -40,7 +46,9 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-splash-screen"],
+    "plugins": [
+      "expo-splash-screen"
+    ],
     "extra": {
       "eas": {
         "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
