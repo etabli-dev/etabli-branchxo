@@ -13,15 +13,36 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-native",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "target": "ES2020",
-    "lib": ["ES2020", "DOM"],
+    "lib": [
+      "ES2020",
+      "DOM"
+    ],
     "module": "ESNext",
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
-    }
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "types": [
+      "node",
+      "jest"
+    ]
   },
-  "include": ["src/**/*", "App.tsx", "__tests__/**/*"],
-  "exclude": ["node_modules", ".expo", "babel.config.js"]
+  "include": [
+    "src/**/*",
+    "App.tsx",
+    "__tests__/**/*",
+    "index.ts",
+    "e2e/**/*.ts",
+    "playwright.config.ts",
+    "App.web.tsx",
+    "GameApp.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    ".expo",
+    "babel.config.js"
+  ]
 }

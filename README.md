@@ -1,7 +1,7 @@
 # branchxo
 
 > **Multiverse Tic-Tac-Toe** — a branching-timeline twist on the classic 3×3 game.
-> React Native + Expo (SDK 51) + TypeScript (strict).
+> React Native + Expo (SDK 58) + TypeScript (strict).
 > Repository: <https://github.com/etabli-dev/etabli-branchxo>
 
 `branchxo` is not ordinary tic-tac-toe. Every move is recorded on an explicit
@@ -11,21 +11,52 @@ making a different move at any past ply. The full game state is therefore a
 
 ---
 
+The game uses a fixed dark palette; changing the device light/dark setting
+does not switch the game theme.
+
 ## Run
 
 ```bash
-cd Untitled/branchxo
-npm install
+npm ci
 npx expo start
 ```
 
-Press `i` for iOS Simulator, `a` for Android emulator, or scan the QR code with
-Expo Go on a device. The project also runs in the web preview (`w`).
+Prerequisites: Node.js 22.23.4, npm and Git. `npm ci` prepares the local
+CanvasKit engine used by the web view. Start the web app with `npm run web`.
+To build Android, install JDK 17 and the Android SDK, set `ANDROID_HOME`, then
+run `npm run android` with a device/emulator connected. Expo prebuild provisions
+the SDK 58 native project (compile SDK 37, target SDK 36). iOS needs macOS and
+Xcode 26.4 or later. Native device operation is a separate acceptance check.
+
+### Standalone Android development APK
+
+For an APK with its JavaScript included, install Android SDK Platform 37,
+Build Tools 37.0.0, NDK 27.1.12297006 and CMake 3.22.1 using Android Studio's
+SDK Manager. Accept the SDK licenses, set `JAVA_HOME` to JDK 17 and
+`ANDROID_HOME` to the SDK directory, and put its `platform-tools` on `PATH`.
+From the repository root:
+
+```sh
+npm ci
+npx expo prebuild --platform android --no-install
+(cd android && ./gradlew --no-daemon --max-workers=2 \
+  '-Dorg.gradle.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=1g -Dfile.encoding=UTF-8' \
+  -PreactNativeArchitectures=arm64-v8a :app:assembleRelease)
+adb install -r android/app/build/outputs/apk/release/app-release.apk
+```
+
+Launch **branchxo** on the connected arm64 device/emulator. The manifest supports
+Android 7.0 / API 24 and later and targets API 36. This release build variant
+embeds the game bundle, so Metro is unnecessary after installation. Expo's
+generated project signs it with the public Android Debug key: it is a local
+development artifact, not a store release. The ordinary `assembleDebug` APK
+instead expects Metro. CI prepares both variants under the same development
+label; signing for distribution and physical-device acceptance remain separate.
 
 ### Other scripts
 
 ```bash
-npm test           # Jest unit tests (40 tests)
+npm test           # Jest unit tests
 npm run typecheck  # tsc --noEmit (strict)
 npm run lint       # ESLint
 ```
@@ -153,9 +184,26 @@ App.tsx
 
 - TypeScript **strict** (no `any`, `noUncheckedIndexedAccess` on).
 - ESLint clean, Prettier formatted.
-- 40 Jest unit tests covering engine, strength fn, multiverse fork/branch
+- Jest unit tests covering engine, strength fn, multiverse fork/branch
   invariants, AI (easy + perfect), and probability modes.
 - Color-blind-safe palette (Okabe–Ito X/O pair); cells + tree nodes carry
   accessibility labels.
 
 See [DECISIONS.md](./DECISIONS.md) for design notes.
+
+## Verification and distribution
+
+```sh
+npm run check
+npx expo install --check
+npm run export -- --platform all
+npx playwright install chromium
+npm run test:browser
+```
+
+The production web export is `dist/`. Serve it at the origin root over HTTP(S).
+The browser suite exercises the built app at phone dimensions with external
+networking blocked. Read [the refinement record](docs/refinement-2026-10.md)
+for observed results, dependency audit findings, and device/iOS/store
+requirements. There is no configured EAS project or store
+submission in this checkout. Link your own EAS project before using EAS Build.

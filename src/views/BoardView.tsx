@@ -56,10 +56,10 @@ export function BoardView() {
     ? (() => {
         const a = cellRect(winLine[0]);
         const c = cellRect(winLine[2]);
-        const p = Skia.Path.Make();
+        const p = Skia.PathBuilder.Make();
         p.moveTo(a.x + CELL / 2, a.y + CELL / 2);
         p.lineTo(c.x + CELL / 2, c.y + CELL / 2);
-        return p;
+        return p.detach();
       })()
     : null;
   const winColor =
@@ -79,12 +79,12 @@ export function BoardView() {
             return (
               <Path
                 key={`heat-${cell}`}
-                path={Skia.Path.Make().addRect({
+                path={Skia.PathBuilder.Make().addRect({
                   x: x + 2,
                   y: y + 2,
                   width: CELL - 4,
                   height: CELL - 4,
-                })}
+                }).detach()}
                 color={viridis(norm)}
                 opacity={0.18 + 0.32 * norm}
               />
@@ -115,7 +115,7 @@ export function BoardView() {
             const { x, y } = cellRect(idx);
             const pad = 18;
             if (c === 'X') {
-              const p = Skia.Path.Make();
+              const p = Skia.PathBuilder.Make();
               p.moveTo(x + pad, y + pad);
               p.lineTo(x + CELL - pad, y + CELL - pad);
               p.moveTo(x + CELL - pad, y + pad);
@@ -123,7 +123,7 @@ export function BoardView() {
               return (
                 <Path
                   key={`m-${idx}`}
-                  path={p}
+                  path={p.detach()}
                   color={colors.markX}
                   style="stroke"
                   strokeWidth={6}

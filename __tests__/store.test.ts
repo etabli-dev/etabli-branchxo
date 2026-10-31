@@ -29,11 +29,14 @@ global.__DEV__ = true;
 
 import { CellIndex } from '../src/game';
 import { _resetIdCounterForTests, assertTreeInvariants, fullMoves } from '../src/multiverse';
-import { reFreezeTree, useAppStore } from '../src/state/store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { cancelBackgroundWork, flushSave, hydrate, reFreezeTree, useAppStore } from '../src/state/store';
 
 function resetStore() {
   useAppStore.getState().newGame();
 }
+
+afterEach(cancelBackgroundWork);
 
 beforeEach(() => {
   _resetIdCounterForTests();
@@ -258,5 +261,52 @@ describe('audit R3-P1-G: forward tap on AI turn is ignored', () => {
     expect(
       fullMoves(useAppStore.getState().tree, useAppStore.getState().activeUniverseId).length,
     ).toBe(lenBefore);
+  });
+});
+
+
+describe('saved game recovery', () => {
+  beforeEach(async () => {
+    cancelBackgroundWork();
+    await AsyncStorage.clear();
+    useAppStore.setState({ mode: 'hotseat', hydrated: false });
+    await hydrate();
+    useAppStore.getState().newGame();
+  });
+  it('flushes the latest move before the debounce and restores it', async () => {
+    useAppStore.getState().attemptPlay(4);
+    await flushSave();
+    useAppStore.setState({ hydrated: false });
+    useAppStore.getState().newGame();
+    await hydrate();
+    const s = useAppStore.getState();
+    expect(fullMoves(s.tree, s.activeUniverseId).map(m => m.cell)).toEqual([4]);
+  });
+  it('preserves corrupt storage until the explicit new-game action', async () => {
+    cancelBackgroundWork();
+    const corrupt = '{broken';
+    await AsyncStorage.setItem('branchxo:v2', corrupt);
+    await hydrate();
+    useAppStore.getState().setView('tree');
+    await flushSave();
+    expect(await AsyncStorage.getItem('branchxo:v2')).toBe(corrupt);
+    expect(useAppStore.getState().storageError).toContain('preserved');
+    useAppStore.getState().newGame();
+    await flushSave();
+    expect(await AsyncStorage.getItem('branchxo:v2')).not.toBe(corrupt);
+  });
+  it('keeps progress on storage failure and permits a later successful retry', async () => {
+    useAppStore.getState().attemptPlay(4);
+    (AsyncStorage.setItem as jest.Mock).mockRejectedValueOnce(new Error('disk full'));
+    await flushSave();
+    expect(useAppStore.getState().storageError).toContain('Could not save');
+    useAppStore.getState().attemptPlay(0);
+    await flushSave();
+    expect(useAppStore.getState().storageError).toBeNull();
+    useAppStore.setState({ hydrated: false });
+    useAppStore.getState().newGame();
+    await hydrate();
+    const s = useAppStore.getState();
+    expect(fullMoves(s.tree, s.activeUniverseId).map(m => m.cell)).toEqual([4, 0]);
   });
 });

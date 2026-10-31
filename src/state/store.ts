@@ -60,6 +60,7 @@ export interface AppState {
 
   // hydration state
   hydrated: boolean;
+  storageError: string | null;
 
   // actions
   setView: (v: ViewKey) => void;
@@ -88,6 +89,21 @@ export interface AppState {
 
 const STORAGE_KEY = 'branchxo:v2';
 const SCHEMA_VERSION = 2;
+let preserveUnreadSave = false;
+let writes: Promise<void> = Promise.resolve();
+let aiRunId = 0;
+
+function validateSettings(value: Persisted): void {
+  if (!['hotseat', 'vs-computer'].includes(value.mode) || !['easy', 'medium', 'perfect'].includes(value.aiLevel) ||
+      !['X', 'O'].includes(value.aiMark) || !['board', 'timeline', 'tree', 'heat'].includes(value.view) ||
+      !['perfect', 'random'].includes(value.probMode) || !value.overlayFlags ||
+      typeof value.overlayFlags.X !== 'boolean' || typeof value.overlayFlags.O !== 'boolean' ||
+      !Number.isInteger(value.overlayTopN) || value.overlayTopN < 1 || value.overlayTopN > 9 ||
+      !Number.isInteger(value.rolloutCount) || value.rolloutCount < 1 || value.rolloutCount > 10000 ||
+      !Number.isInteger(value.scrubPly) || value.scrubPly < 0 ||
+      value.scrubPly > fullMoves(value.tree, value.activeUniverseId).length) throw new Error('Invalid saved settings');
+}
+
 
 interface Persisted {
   version: number;
@@ -150,10 +166,12 @@ export const useAppStore = create<AppState>((set, get) => {
     rolloutCount: 300,
     pendingBranch: null,
     hydrated: false,
+    storageError: null,
 
     setView: (v) => set({ view: v }),
     setMode: (m) => {
-      set({ mode: m });
+      aiRunId += 1;
+      set({ mode: m, aiThinking: false });
       // Audit P1-1: auto-trigger AI if switching to vs-computer and it's AI's turn
       if (m === 'vs-computer') {
         const s = get();
@@ -165,7 +183,8 @@ export const useAppStore = create<AppState>((set, get) => {
     },
     setAiLevel: (l) => set({ aiLevel: l }),
     setAiMark: (m) => {
-      set({ aiMark: m });
+      aiRunId += 1;
+      set({ aiMark: m, aiThinking: false });
       // re-check: if it's now the AI's turn, kick it
       const s = get();
       if (s.mode === 'vs-computer') {
@@ -186,8 +205,9 @@ export const useAppStore = create<AppState>((set, get) => {
       const s = get();
       const active = s.tree.universes[s.activeUniverseId];
       const max = active ? fullMoves(s.tree, active.id).length : 0;
-      const clamped = Math.max(0, Math.min(p, max));
-      set({ scrubPly: clamped });
+      const clamped = Number.isFinite(p) ? Math.max(0, Math.min(Math.floor(p), max)) : 0;
+      aiRunId += 1;
+      set({ scrubPly: clamped, aiThinking: false });
     },
     setActiveUniverse: (id) => {
       const u = get().tree.universes[id];
@@ -195,19 +215,25 @@ export const useAppStore = create<AppState>((set, get) => {
       const moves = fullMoves(get().tree, id);
       // Audit P0-3: cancel any pending branch when active universe changes,
       // because the pending branch was relative to a different universe.
-      set({ activeUniverseId: id, scrubPly: moves.length, pendingBranch: null });
+      aiRunId += 1;
+      set({ activeUniverseId: id, scrubPly: moves.length, pendingBranch: null, aiThinking: false });
       get().recomputeProbHistory();
     },
 
     newGame: () => {
+      preserveUnreadSave = false;
+      aiRunId += 1;
       cancelProbRecompute();
       const next = makeInitialTreeAndId();
       set({
         tree: next.tree,
+        storageError: null,
+        aiThinking: false,
         activeUniverseId: next.activeUniverseId,
         scrubPly: 0,
         pendingBranch: null,
       });
+      if (get().mode === 'vs-computer' && get().aiMark === 'X') void get().triggerAiMove();
     },
 
     cancelPendingBranch: () => set({ pendingBranch: null }),
@@ -324,9 +350,11 @@ export const useAppStore = create<AppState>((set, get) => {
 
     triggerAiMove: async () => {
       const s = get();
+      if (s.aiThinking || s.mode !== 'vs-computer') return;
       const active = s.tree.universes[s.activeUniverseId];
       if (!active || active.status.kind !== 'open') return;
-      if (active.status.toMove !== s.aiMark) return;
+      if (active.status.toMove !== s.aiMark || s.scrubPly !== fullMoves(s.tree, active.id).length) return;
+      const myRunId = ++aiRunId;
       set({ aiThinking: true });
       // Audit P1-2: yield to UI so the "thinking…" indicator can render
       await new Promise<void>((resolve) => setTimeout(resolve, 0));
@@ -334,6 +362,7 @@ export const useAppStore = create<AppState>((set, get) => {
         // Audit R3-P1-H: re-read state after the yield. If the universe / mode /
         // aiMark changed during our wait (e.g. user hit "new game" or switched
         // active), bail out instead of applying the move to stale state.
+        if (myRunId !== aiRunId) return;
         const post = get();
         const postActive = post.tree.universes[post.activeUniverseId];
         if (!postActive || postActive.id !== active.id) return;
@@ -351,7 +380,7 @@ export const useAppStore = create<AppState>((set, get) => {
         });
         get().recomputeProbHistory();
       } finally {
-        set({ aiThinking: false });
+        if (myRunId === aiRunId) set({ aiThinking: false });
       }
     },
 
@@ -389,46 +418,73 @@ export const useAppStore = create<AppState>((set, get) => {
 /** Save state to AsyncStorage (debounced). */
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 export function scheduleSave(): void {
+  if (preserveUnreadSave) return;
   if (saveTimer) clearTimeout(saveTimer);
-  saveTimer = setTimeout(async () => {
-    const s = useAppStore.getState();
-    const payload: Persisted = {
-      version: SCHEMA_VERSION,
-      tree: s.tree,
-      activeUniverseId: s.activeUniverseId,
-      scrubPly: s.scrubPly,
-      mode: s.mode,
-      aiLevel: s.aiLevel,
-      aiMark: s.aiMark,
-      view: s.view,
-      overlayFlags: s.overlayFlags,
-      overlayTopN: s.overlayTopN,
-      probMode: s.probMode,
-      rolloutCount: s.rolloutCount,
-    };
-    try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-    } catch (e) {
-      if (__DEV__) console.warn('branchxo: persist failed', e);
-    }
-  }, 300);
+  saveTimer = setTimeout(() => { void flushSave(); }, 300);
+}
+
+/** Flush before backgrounding so the debounce cannot discard the latest move. */
+export async function flushSave(): Promise<void> {
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = null;
+  if (preserveUnreadSave || !useAppStore.getState().hydrated) return;
+  const s = useAppStore.getState();
+  const payload: Persisted = {
+    version: SCHEMA_VERSION,
+    tree: s.tree,
+    activeUniverseId: s.activeUniverseId,
+    scrubPly: s.scrubPly,
+    mode: s.mode,
+    aiLevel: s.aiLevel,
+    aiMark: s.aiMark,
+    view: s.view,
+    overlayFlags: s.overlayFlags,
+    overlayTopN: s.overlayTopN,
+    probMode: s.probMode,
+    rolloutCount: s.rolloutCount,
+  };
+  try {
+    const serialized = JSON.stringify(payload);
+    writes = writes.catch(() => undefined).then(() => AsyncStorage.setItem(STORAGE_KEY, serialized));
+    await writes;
+    if (useAppStore.getState().storageError !== null) useAppStore.setState({ storageError: null });
+  } catch (e) {
+    if (__DEV__) console.warn('branchxo: persist failed', e);
+    useAppStore.setState({ storageError: 'Could not save the game. Keep the app open and free some storage.' });
+  }
+ }
+
+/** Stop work owned by the current screen when it leaves the application tree. */
+export function cancelBackgroundWork(): void {
+  aiRunId += 1;
+  cancelProbRecompute();
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = null;
 }
 
 /** Hydrate state from AsyncStorage at app start. */
 export async function hydrate(): Promise<void> {
+  if (saveTimer !== null) await flushSave();
+  cancelBackgroundWork();
+  useAppStore.setState({ hydrated: false });
   try {
+    await writes.catch(() => undefined);
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    if (!raw) preserveUnreadSave = false;
     if (raw) {
       const parsed = JSON.parse(raw) as Persisted;
       if (
         parsed.version === SCHEMA_VERSION &&
         parsed.tree.universes[parsed.activeUniverseId]
       ) {
-        try {
+        {
           // Audit P0-2: re-freeze boards defensively before invariant check.
           const frozenTree = reFreezeTree(parsed.tree);
           assertTreeInvariants(frozenTree);
+          validateSettings(parsed);
+          preserveUnreadSave = false;
           useAppStore.setState({
+            storageError: null,
             tree: frozenTree,
             activeUniverseId: parsed.activeUniverseId,
             scrubPly: parsed.scrubPly,
@@ -441,21 +497,26 @@ export async function hydrate(): Promise<void> {
             probMode: parsed.probMode,
             rolloutCount: parsed.rolloutCount,
           });
-        } catch (e) {
-          if (__DEV__) console.warn('branchxo: stored tree failed invariants, resetting', e);
         }
+      } else {
+        throw new Error('Unsupported or incomplete saved game');
       }
     }
   } catch (e) {
+    preserveUnreadSave = true;
+    useAppStore.setState({ storageError: 'The saved game could not be loaded and has been preserved. New game replaces it.' });
     if (__DEV__) console.warn('branchxo: hydrate failed', e);
   } finally {
     useAppStore.getState()._setHydrated(true);
+    if (!preserveUnreadSave) void useAppStore.getState().triggerAiMove();
   }
 }
 
 // Auto-persist on state changes.
-useAppStore.subscribe(() => {
-  if (useAppStore.getState().hydrated) scheduleSave();
+useAppStore.subscribe((state, previous) => {
+  const persistedKeys: (keyof Persisted)[] = ['tree', 'activeUniverseId', 'scrubPly', 'mode',
+    'aiLevel', 'aiMark', 'view', 'overlayFlags', 'overlayTopN', 'probMode', 'rolloutCount'];
+  if (state.hydrated && persistedKeys.some((key) => key !== 'version' && state[key] !== previous[key])) scheduleSave();
 });
 
 // `__DEV__` global (declared in react-native runtime, declared here for tsc)

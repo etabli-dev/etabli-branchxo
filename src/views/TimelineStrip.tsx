@@ -27,13 +27,13 @@ const MiniBoard = React.memo(function MiniBoardImpl({ board, highlighted }: Mini
         {[1, 2].map((i) => (
           <Group key={i}>
             <Path
-              path={Skia.Path.Make().moveTo(i * M_CELL, 0).lineTo(i * M_CELL, MINI)}
+              path={Skia.PathBuilder.Make().moveTo(i * M_CELL, 0).lineTo(i * M_CELL, MINI).detach()}
               color={colors.border}
               style="stroke"
               strokeWidth={1}
             />
             <Path
-              path={Skia.Path.Make().moveTo(0, i * M_CELL).lineTo(MINI, i * M_CELL)}
+              path={Skia.PathBuilder.Make().moveTo(0, i * M_CELL).lineTo(MINI, i * M_CELL).detach()}
               color={colors.border}
               style="stroke"
               strokeWidth={1}
@@ -47,11 +47,11 @@ const MiniBoard = React.memo(function MiniBoardImpl({ board, highlighted }: Mini
           const x = col * M_CELL;
           const y = row * M_CELL;
           if (c === 'X') {
-            const p = Skia.Path.Make();
+            const p = Skia.PathBuilder.Make();
             p.moveTo(x + 4, y + 4).lineTo(x + M_CELL - 4, y + M_CELL - 4);
             p.moveTo(x + M_CELL - 4, y + 4).lineTo(x + 4, y + M_CELL - 4);
             return (
-              <Path key={idx} path={p} color={colors.markX} style="stroke" strokeWidth={2} />
+              <Path key={idx} path={p.detach()} color={colors.markX} style="stroke" strokeWidth={2} />
             );
           }
           return (
@@ -71,12 +71,12 @@ const MiniBoard = React.memo(function MiniBoardImpl({ board, highlighted }: Mini
           const aRow = Math.floor(winLine.line[0] / 3);
           const cCol = winLine.line[2] % 3;
           const cRow = Math.floor(winLine.line[2] / 3);
-          const p = Skia.Path.Make();
+          const p = Skia.PathBuilder.Make();
           p.moveTo(aCol * M_CELL + M_CELL / 2, aRow * M_CELL + M_CELL / 2);
           p.lineTo(cCol * M_CELL + M_CELL / 2, cRow * M_CELL + M_CELL / 2);
           const color = winLine.winner === 'X' ? colors.outcomeXWin : colors.outcomeOWin;
           return (
-            <Path path={p} color={color} style="stroke" strokeWidth={2.5} opacity={0.9} />
+            <Path path={p.detach()} color={color} style="stroke" strokeWidth={2.5} opacity={0.9} />
           );
         })()}
       </Canvas>

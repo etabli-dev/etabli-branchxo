@@ -11,7 +11,6 @@ import {
 } from '../game';
 import { MultiverseTree, ProbPoint, Universe, UniverseId } from './types';
 
-/* eslint-disable @typescript-eslint/no-use-before-define */
 
 /** Stable, monotonic id generator that does not require crypto. */
 let idCounter = 0;
@@ -30,15 +29,26 @@ export function _resetIdCounterForTests(): void {
  * walking up to the root and concatenating prefixes correctly.
  */
 export function fullMoves(tree: MultiverseTree, universeId: UniverseId): readonly Move[] {
-  const u = tree.universes[universeId];
-  if (!u) throw new Error(`Unknown universe ${universeId}`);
-  if (u.parentId === null) {
-    return u.moves;
+  const path: Universe[] = [];
+  const seen = new Set<UniverseId>();
+  let id: UniverseId | null = universeId;
+  while (id !== null) {
+    if (seen.has(id)) throw new Error('Cyclic universe ancestry');
+    seen.add(id);
+    const node: Universe | undefined = tree.universes[id];
+    if (!node) throw new Error(`Unknown universe ${id}`);
+    path.push(node);
+    id = node.parentId;
   }
-  const parent = tree.universes[u.parentId];
-  if (!parent) throw new Error(`Dangling parent ${u.parentId} for ${universeId}`);
-  const parentFull = fullMoves(tree, parent.id);
-  return [...parentFull.slice(0, u.parentPly), ...u.moves];
+  let moves: readonly Move[] = [];
+  for (const node of path.reverse()) {
+    if (!Number.isInteger(node.parentPly) || node.parentPly < 0 || node.parentPly > moves.length) {
+      throw new Error(`Invalid parentPly for ${node.id}`);
+    }
+    moves = [...moves.slice(0, node.parentPly), ...node.moves];
+    if (moves.length > 9) throw new Error('Too many moves for a tic-tac-toe board');
+  }
+  return moves;
 }
 
 /** Reconstruct the board for the given universe by full replay (no caching). */
@@ -273,22 +283,28 @@ export function summarize(tree: MultiverseTree): MultiverseSummary {
 
 /** Invariant check: each non-root universe's prefix (parent path up to parentPly) is consistent. */
 export function assertTreeInvariants(tree: MultiverseTree): void {
-  for (const u of Object.values(tree.universes)) {
-    if (u.parentId === null) {
-      if (u.parentPly !== 0) throw new Error(`Root ${u.id} has parentPly != 0`);
-      continue;
-    }
-    const parent = tree.universes[u.parentId];
-    if (!parent) throw new Error(`Universe ${u.id} has missing parent ${u.parentId}`);
-    const parentFull = fullMoves(tree, parent.id);
-    if (u.parentPly < 0 || u.parentPly > parentFull.length) {
-      throw new Error(`Universe ${u.id} parentPly out of range`);
-    }
-    const reconstructed = replay([...parentFull.slice(0, u.parentPly), ...u.moves]);
-    for (let i = 0; i < 9; i++) {
-      if (reconstructed[i] !== u.board[i]) {
-        throw new Error(`Universe ${u.id} board mismatch at cell ${i}`);
+  if (!tree || typeof tree.rootId !== 'string' || !tree.universes ||
+      !Object.prototype.hasOwnProperty.call(tree.universes, tree.rootId)) throw new Error('Missing root universe');
+  for (const [id, u] of Object.entries(tree.universes)) {
+    if (!u || u.id !== id || !Array.isArray(u.moves) || !Array.isArray(u.board) || u.board.length !== 9 ||
+        (u.parentId !== null && typeof u.parentId !== 'string')) throw new Error('Malformed universe');
+    if ((u.parentId === null) !== (u.id === tree.rootId)) throw new Error('Tree must have one root');
+    const moves = fullMoves(tree, id);
+    moves.forEach((move, ply) => {
+      if (!Number.isInteger(move.cell) || move.cell < 0 || move.cell > 8 || move.mark !== (ply % 2 === 0 ? 'X' : 'O')) {
+        throw new Error(`Invalid move sequence in ${id}`);
       }
+    });
+    const reconstructed = replay(moves);
+    if (reconstructed.some((cell, i) => cell !== u.board[i])) throw new Error(`Universe ${id} board mismatch`);
+    if (JSON.stringify(statusFor(reconstructed)) !== JSON.stringify(u.status)) throw new Error(`Universe ${id} status mismatch`);
+    if (!Number.isFinite(u.createdAt) || typeof u.label !== 'string' || !Array.isArray(u.probHistory)) throw new Error('Malformed universe metadata');
+    const plies = new Set<number>();
+    for (const point of u.probHistory) {
+      if (!point || !Number.isInteger(point.ply) || point.ply < 0 || point.ply > moves.length || plies.has(point.ply) ||
+          [point.pX, point.pO, point.pDraw].some((p) => !Number.isFinite(p) || p < 0 || p > 1) ||
+          Math.abs(point.pX + point.pO + point.pDraw - 1) > 0.000001) throw new Error('Invalid probability history');
+      plies.add(point.ply);
     }
   }
 }

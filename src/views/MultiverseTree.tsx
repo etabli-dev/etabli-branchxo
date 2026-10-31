@@ -110,14 +110,14 @@ export function MultiverseTree() {
               {/* edges colored by destination outcome (faded) */}
               {layout.edges.map((e, i) => {
                 const onActivePath = activePath.has(e.from.id) && activePath.has(e.to.id);
-                const p = Skia.Path.Make();
+                const p = Skia.PathBuilder.Make();
                 p.moveTo(e.from.x, e.from.y);
                 p.lineTo(e.to.x, e.to.y);
                 const outColor = nodeColor(e.to.universe);
                 return (
                   <Path
                     key={`edge-${i}`}
-                    path={p}
+                    path={p.detach()}
                     color={onActivePath ? colors.accent : outColor}
                     style="stroke"
                     strokeWidth={onActivePath ? 3 : 1.5}

@@ -35,14 +35,14 @@ export function ProbabilityChart() {
   const swingPly = useMemo(() => biggestSwingPly(history), [history]);
 
   function buildPath(ys: number[]): ReturnType<typeof Skia.Path.Make> {
-    const p = Skia.Path.Make();
+    const p = Skia.PathBuilder.Make();
     for (let i = 0; i < ys.length; i++) {
       const x = points.x[i] ?? 0;
       const y = ys[i] ?? 0;
       if (i === 0) p.moveTo(x, y);
       else p.lineTo(x, y);
     }
-    return p;
+    return p.detach();
   }
 
   return (
@@ -53,10 +53,10 @@ export function ProbabilityChart() {
           {/* axes */}
           <Group>
             <Path
-              path={Skia.Path.Make()
+              path={Skia.PathBuilder.Make()
                 .moveTo(PAD_L, PAD_T)
                 .lineTo(PAD_L, H - PAD_B)
-                .lineTo(W - PAD_R, H - PAD_B)}
+                .lineTo(W - PAD_R, H - PAD_B).detach()}
               color={colors.border}
               style="stroke"
               strokeWidth={1}
@@ -64,9 +64,9 @@ export function ProbabilityChart() {
           </Group>
           {/* gridline at 0.5 */}
           <Path
-            path={Skia.Path.Make()
+            path={Skia.PathBuilder.Make()
               .moveTo(PAD_L, PAD_T + (H - PAD_T - PAD_B) / 2)
-              .lineTo(W - PAD_R, PAD_T + (H - PAD_T - PAD_B) / 2)}
+              .lineTo(W - PAD_R, PAD_T + (H - PAD_T - PAD_B) / 2).detach()}
             color={colors.border}
             style="stroke"
             strokeWidth={0.5}

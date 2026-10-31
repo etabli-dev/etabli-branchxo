@@ -38,7 +38,7 @@ export function HeatView() {
             return (
               <Group key={idx}>
                 <Path
-                  path={Skia.Path.Make().addRect({ x: x + 2, y: y + 2, width: CELL - 4, height: CELL - 4 })}
+                  path={Skia.PathBuilder.Make().addRect({ x: x + 2, y: y + 2, width: CELL - 4, height: CELL - 4 }).detach()}
                   color={fill}
                   opacity={opacity}
                 />
@@ -49,13 +49,13 @@ export function HeatView() {
           {[1, 2].map((i) => (
             <Group key={i}>
               <Path
-                path={Skia.Path.Make().moveTo(i * CELL, 0).lineTo(i * CELL, SIZE)}
+                path={Skia.PathBuilder.Make().moveTo(i * CELL, 0).lineTo(i * CELL, SIZE).detach()}
                 color={colors.border}
                 style="stroke"
                 strokeWidth={2}
               />
               <Path
-                path={Skia.Path.Make().moveTo(0, i * CELL).lineTo(SIZE, i * CELL)}
+                path={Skia.PathBuilder.Make().moveTo(0, i * CELL).lineTo(SIZE, i * CELL).detach()}
                 color={colors.border}
                 style="stroke"
                 strokeWidth={2}

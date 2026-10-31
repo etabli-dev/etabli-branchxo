@@ -1,0 +1,23 @@
+---
+title: "Current implementation and first use"
+---
+
+Play branching tic-tac-toe, revisit a position and create another universe. Saved histories are validated and retained on read failure. AI and probability estimates are heuristic.
+
+This page describes the October 2026 source revision. These source changes are not part of older development release downloads. Local checks are distinct from device, live-service and store acceptance.
+
+## Build from a clean checkout
+
+Node 22.23.4 and npm. Native Android additionally needs JDK 17 and SDK 37; use npm run android with a device/emulator. iOS needs Xcode 26.4+. The Expo 58.0.22 patch passes source, browser and high-severity dependency checks locally; patched native builds are pending at this source freeze. The refinement record separates the prior native baseline from current-patch verification.
+
+```sh
+npm ci
+npm run check
+npm run web
+```
+
+These commands build from this source tree. The README also provides a bundled Android development APK path that does not require Metro after installation. Both local variants use the Android Debug key; distribution requires private signing and device acceptance. A successful build is not a store submission.
+
+## Use and verification
+
+Read the [repository README](https://github.com/etabli-dev/etabli-branchxo/blob/main/README.md) for the exact application workflow, privacy/storage behavior and platform differences. The [October refinement record](https://github.com/etabli-dev/etabli-branchxo/blob/main/docs/refinement-2026-10.md) records findings, changes, observed checks, deferred work and the next release action. See the workflow runs for the exact source commit; local verification does not establish a remote CI result.

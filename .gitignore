@@ -14,3 +14,7 @@ android/
 .env*
 .DS_Store
 coverage/
+
+/public/canvaskit.wasm
+/playwright-report/
+/test-results/
