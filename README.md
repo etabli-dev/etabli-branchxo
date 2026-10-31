@@ -30,7 +30,8 @@ Xcode 26.4 or later. Native device operation is a separate acceptance check.
 
 ### Standalone Android development APK
 
-For an APK with its JavaScript included, install Android SDK Platform 37,
+For an APK with its JavaScript included, install Android SDK Platform 37.0
+(`sdkmanager` package `platforms;android-37.0`),
 Build Tools 37.0.0, NDK 27.1.12297006 and CMake 3.22.1 using Android Studio's
 SDK Manager. Accept the SDK licenses, set `JAVA_HOME` to JDK 17 and
 `ANDROID_HOME` to the SDK directory, and put its `platform-tools` on `PATH`.

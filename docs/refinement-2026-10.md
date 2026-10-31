@@ -1,5 +1,9 @@
 # October 2026 refinement
 
+## SDK package provisioning follow-up
+
+The [first fresh BranchXO CI run](https://github.com/etabli-dev/etabli-branchxo/actions/runs/41201647115) stopped before the Android build because `sdkmanager` could not find `platforms;android-37`. The [official SDK repository metadata](https://dl.google.com/android/repository/repository2-3.xml) publishes this base platform as `platforms;android-37.0` (revision 2, stable channel 0). The installed local SDK and a fresh `sdkmanager --list` agree. This workflow now requests that exact identifier; compile SDK 37, target SDK 36, build-tools 37.0.0, NDK 27.1.12297006 and CMake 3.22.1 remain unchanged. The pinned setup action already accepted the Android SDK licenses successfully in the failed run. The corrected command and workflow structure are validated locally; a successful fresh CI Android build remains pending.
+
 ## Purpose and acceptance
 
 Preserve the existing game rules, AI behavior, visualizations and saved games. A new user must be able to install from the lockfile, start a supported Expo development build, finish/restart a game and recover saved state. Validate unit tests, strict typing, lint and real application bundles; treat simulator/device and store acceptance separately.
