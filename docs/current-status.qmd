@@ -4,7 +4,7 @@ title: "Current implementation and first use"
 
 Play branching tic-tac-toe, revisit a position and create another universe. Saved histories are validated and retained on read failure. AI and probability estimates are heuristic.
 
-This page describes the October 2026 refinement and its November follow-up. These source changes are not part of older development release downloads. Local checks are distinct from device, live-service and store acceptance.
+This page describes the October–November 2026 refinement. These source changes are not part of older development release downloads. Local checks are distinct from device, live-service and store acceptance.
 
 ## Build from a clean checkout
 
@@ -20,4 +20,6 @@ These commands build from this source tree. The README also provides a bundled A
 
 ## Use and verification
 
-Read the [repository README](https://github.com/etabli-dev/etabli-branchxo/blob/main/README.md) for the exact application workflow, privacy/storage behavior and platform differences. The [October refinement record](https://github.com/etabli-dev/etabli-branchxo/blob/main/docs/refinement-2026-10.md) records findings, changes, observed checks, deferred work and the next release action. See the workflow runs for the exact source commit; local verification does not establish a remote CI result.
+Read the [repository README](https://github.com/etabli-dev/etabli-branchxo/blob/main/README.md) for the exact application workflow, privacy/storage behavior and platform differences. The [October–November refinement record](https://github.com/etabli-dev/etabli-branchxo/blob/main/docs/refinement-2026-10.md) records findings, changes, observed checks, deferred work and the next release action. See the workflow runs for the exact source commit; local verification does not establish a remote CI result.
+
+On 2026-11-02, the standalone APK identified in the refinement record passed offline Hotseat win → restart → native views → confirmed branch → restart on an API 35 ARM64/4 KiB emulator. Both universes were retained, including the original win. Native AI cancellation, broader lifecycle/accessibility/performance, physical-device, 16 KiB and iOS acceptance remain open.
