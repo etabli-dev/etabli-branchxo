@@ -54,6 +54,22 @@ development artifact, not a store release. The ordinary `assembleDebug` APK
 instead expects Metro. CI prepares both variants under the same development
 label; signing for distribution and physical-device acceptance remain separate.
 
+### Android permissions
+
+After building both APK variants, run `npm run check:android-permissions`.
+The check reads the actual APK manifests with Build Tools 37.0.0 `aapt`, using
+`ANDROID_HOME` or `ANDROID_SDK_ROOT`; set `AAPT` to use an explicit executable.
+For existing artifacts, use `npm run check:android-permissions -- --debug path/to/debug.apk --release path/to/release.apk`.
+
+Both variants retain an ordinary, uncapped `INTERNET` declaration for Metro
+development and may request their own signature permission for internal receiver
+registration. The debug APK may also request `SYSTEM_ALERT_WINDOW` for React
+Native's legacy performance monitor and `ACCESS_LOCAL_NETWORK` for the bundled
+React Native/Expo Metro development tooling. The standalone APK must omit both.
+Shared-storage read/write, vibration and all other unexpected permissions are
+rejected; saved games use app-private storage.
+CI runs this check after building both APKs.
+
 ### Other scripts
 
 ```bash

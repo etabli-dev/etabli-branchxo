@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit",
     "export": "expo export",
     "test:browser": "playwright test",
+    "check:android-permissions": "node tool/check-android-permissions.mjs",
     "postinstall": "node tool/prepare-web.mjs",
     "preexport": "node tool/prepare-web.mjs",
     "preweb": "node tool/prepare-web.mjs",

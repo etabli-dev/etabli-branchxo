@@ -36,7 +36,13 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#28A745"
       },
-      "permissions": []
+      "permissions": [],
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.VIBRATE",
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"

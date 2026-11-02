@@ -2,7 +2,7 @@
 
 ## SDK package provisioning follow-up
 
-The [first fresh BranchXO CI run](https://github.com/etabli-dev/etabli-branchxo/actions/runs/41201647115) stopped before the Android build because `sdkmanager` could not find `platforms;android-37`. The [official SDK repository metadata](https://dl.google.com/android/repository/repository2-3.xml) publishes this base platform as `platforms;android-37.0` (revision 2, stable channel 0). The installed local SDK and a fresh `sdkmanager --list` agree. This workflow now requests that exact identifier; compile SDK 37, target SDK 36, build-tools 37.0.0, NDK 27.1.12297006 and CMake 3.22.1 remain unchanged. The pinned setup action already accepted the Android SDK licenses successfully in the failed run. The corrected command and workflow structure are validated locally; a successful fresh CI Android build remains pending.
+The [first fresh BranchXO CI run](https://github.com/etabli-dev/etabli-branchxo/actions/runs/41201647115) stopped before the Android build because `sdkmanager` could not find `platforms;android-37`. The [official SDK repository metadata](https://dl.google.com/android/repository/repository2-3.xml) publishes this base platform as `platforms;android-37.0` (revision 2, stable channel 0). The installed local SDK and a fresh `sdkmanager --list` agree. This workflow now requests that exact identifier; compile SDK 37, target SDK 36, build-tools 37.0.0, NDK 27.1.12297006 and CMake 3.22.1 remain unchanged. The pinned setup action already accepted the Android SDK licenses successfully in the failed run. The corrected workflow completed successfully on October 31 at `a5f1e2811c646572dd03b8306e4c6ccd54bde7b2`: [application run 41201810724](https://github.com/etabli-dev/etabli-branchxo/actions/runs/41201810724). Both Android variants, source/browser checks and the high-severity dependency gate passed. This observed dependency-patch result precedes the separate November 2 permission repair recorded below.
 
 ## Purpose and acceptance
 
@@ -17,7 +17,7 @@ The apps use Expo SDK 51 / React Native 0.74.5, an obsolete distribution toolcha
 3. Review persistence, illegal moves, branching/AI cancellation and probability calculations. Add regression tests for observed defects, not duplicated implementation assertions.
 4. Build the actual app, add CI and accurate first-use instructions, and record remaining device/store gates.
 
-Local implementation and functional verification are complete for this repair scope. Raw evidence is in the suite workspace `.refinement/2026-10-30/logs`. The native patch verification and external acceptance gates below still prevent an unconditional release-readiness claim.
+Local implementation and functional verification are complete for this repair scope. Raw evidence is in the suite workspace `.refinement/2026-10-30/logs`. The external acceptance gates below still prevent an unconditional release-readiness claim. Dated native verification milestones are recorded separately.
 
 ### Supported runtime milestone
 
@@ -75,7 +75,7 @@ exploit was observed. CI retains its independent high-severity gate.
 - Two Chromium journeys pass: complete win → reload → view changes → fork, plus engine-load failure handling. External networking is blocked during the application journeys (`branchxo-sdk-patch-cached-browser`).
 - The live manifest/lockfile and 47 JavaScript/TypeScript source/configuration files match the isolated candidate used for those checks. Documentation and CI changes are reviewed separately.
 
-### Native baseline and pending patch verification
+### Native baseline and dependency-patch verification
 
 Before the 58.0.22 patch, native arm64 debug and standalone development APKs
 built successfully on Expo 58.0.21 / expo-modules-core 58.0.28. The standalone
@@ -86,14 +86,7 @@ alignment criteria. Baseline standalone SHA-256:
 `79d32f5d21e746ef5210044c6f09962708687e86417aca0ee144d28145f990de`.
 This historical APK does **not** validate the newer native patch.
 
-The patched native debug and standalone builds are **pending at this source
-freeze**. Local work continues with one Gradle worker and an external CMake
-one-job pool because the host has heavy load and memory pressure. BranchXO's
-first patched attempt was deliberately interrupted to enforce that resource
-limit; it was not a compiler failure. Final native completion and artifact
-hashes will be recorded in the suite workspace receipts and the exact-commit
-GitHub workflow results. A passing source/export check does not imply a passing
-native build, remote CI result or installation.
+The patched native debug and standalone variants passed in the October 31 [GitHub run](https://github.com/etabli-dev/etabli-branchxo/actions/runs/41201810724). The downloaded CI APKs were independently checked for signatures, bundled standalone JavaScript, minimum API 24 / target API 36 and 16 KiB ZIP/arm64 ELF alignment. These are dependency-patch artifacts; the November 2 permission repair supersedes them for local testing. Earlier pending-build notes applied to the initial source freeze, not to this observed CI outcome. The initial local patched attempt was deliberately interrupted to enforce one CMake job under host memory pressure; the subsequent local debug and standalone builds completed. That interruption was not a compiler failure.
 
 The README gives exact standalone build/install prerequisites and commands.
 The ordinary debug variant requires Metro; the release build variant embeds
@@ -101,6 +94,50 @@ the game bundle. Both generated variants use the Android Debug key and are
 local development artifacts. CI explicitly installs the matching SDK/NDK/CMake,
 builds both variants, checks the embedded standalone bundle and uploads them
 under a development label. No private distribution signing is configured.
+
+### Android permission repair (2026-11-02)
+
+Inspection of the earlier built APKs found unused legacy storage, vibration and
+standalone overlay permissions inherited from native dependencies/templates.
+Neither game uses these capabilities; saved games use app-private AsyncStorage.
+The Expo configuration now explicitly blocks `READ_EXTERNAL_STORAGE`,
+`WRITE_EXTERNAL_STORAGE`, `VIBRATE` and `SYSTEM_ALERT_WINDOW` using
+[blockedPermissions](https://docs.expo.dev/guides/permissions/). An empty
+`permissions` list alone does not remove inherited declarations.
+
+The new `npm run check:android-permissions` reads the actual debug and standalone
+APKs with Android's `aapt`. It requires ordinary uncapped `INTERNET`, permits the
+app's AndroidX internal receiver permission, and rejects any unexpected requested
+permission. Debug alone may retain React Native/Expo's optional overlay and
+local-network development tooling. Those two permissions are absent from the
+standalone APK. Retaining `INTERNET` for framework/development compatibility is
+not a claim that Android prevents all networking. The game itself needs no server.
+CI runs the package check after building both variants and before uploading them.
+
+Local validation completed on November 2:
+
+- Typing, zero-warning lint and all **62 unit tests** pass. Lint excludes only
+  generated Quarto `docs/_site` output; authored source and documentation inputs
+  retain their existing checks. The first local lint failure was from rendered
+  library JavaScript and remains recorded separately.
+- Expo dependency compatibility and the online high-severity audit pass; residual
+  moderate/low findings remain as listed above. Resolved application identifiers
+  and the four blocked permissions are preserved.
+- Both arm64 debug and standalone APKs build from the permission-repaired source.
+  The actual package permission gate passes for both. The same checker rejects
+  the preserved October CI APKs for their excess permissions; separate malformed
+  tool-output checks are not substituted for the actual APK checks.
+- Both APK signatures, minimum API 24 / target API 36, ZIP alignment and arm64 ELF
+  load alignment/offset congruence at 16 KiB pass. The standalone APK contains the
+  embedded game bundle and is not debuggable; the ordinary debug APK needs Metro.
+  Both use the Android Debug key and are development artifacts, not store releases.
+- Source/configuration/assets are hash-checked against the explicit November 2
+  source snapshot. Build/check logs and immutable APK copies are retained in the
+  suite workspace `.refinement/2026-10-30/`. Device journeys are separate evidence.
+
+Debug APK SHA-256: `7420d67b15dc69f5240da801f0c57a154d16dc764e66584d664415ebb44b8850`.
+
+Standalone development APK SHA-256: `85fe33b32024e19464ada7ca811540d8aab42f487e4fd6ba139861f18cc36380`.
 
 ### Remaining acceptance and next action
 
@@ -110,10 +147,7 @@ theme, and Android prebuild warns that optional system-UI integration is absent.
 The README states the fixed appearance; no dependency was added solely to
 silence that warning. Adaptive themes remain outside this repair scope.
 
-Complete the current-patch native build/packaging gates and inspect the workflow
-result for the published commit. Full interactive AVDs suffered documented
-system-wide failures during the suite's device work, so a native game journey
-was not performed. A healthy emulator or physical arm64 device must still verify
+The October 31 interactive AVD attempts suffered documented system-wide failures; no native game journey was completed in that attempt. Dated later device results belong to the suite workspace journey receipts. A healthy emulator or physical arm64 device must still verify
 play, reload, view changes, AI cancellation, lifecycle, accessibility, performance
 and 16 KiB-device behavior. Static alignment checks alone do not establish those
 runtime outcomes. iOS native compilation requires Xcode 26.4+ (absent here),

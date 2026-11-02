@@ -4,11 +4,11 @@ title: "Current implementation and first use"
 
 Play branching tic-tac-toe, revisit a position and create another universe. Saved histories are validated and retained on read failure. AI and probability estimates are heuristic.
 
-This page describes the October 2026 source revision. These source changes are not part of older development release downloads. Local checks are distinct from device, live-service and store acceptance.
+This page describes the October 2026 refinement and its November follow-up. These source changes are not part of older development release downloads. Local checks are distinct from device, live-service and store acceptance.
 
 ## Build from a clean checkout
 
-Node 22.23.4 and npm. Native Android additionally needs JDK 17 and SDK 37; use npm run android with a device/emulator. iOS needs Xcode 26.4+. The Expo 58.0.22 patch passes source, browser and high-severity dependency checks locally; patched native builds are pending at this source freeze. The refinement record separates the prior native baseline from current-patch verification.
+Node 22.23.4 and npm. Native Android additionally needs JDK 17 and SDK platform package `platforms;android-37.0`; use `npm run android` with a device/emulator. iOS needs Xcode 26.4+. The Expo 58.0.22 dependency patch passed source, browser, audit and Android debug/standalone builds in the [October 31 CI run](https://github.com/etabli-dev/etabli-branchxo/actions/runs/41201810724). The November 2 permission repair also passes both local Android builds and checks the permissions in the resulting APKs. The refinement record distinguishes these package checks from remaining device acceptance.
 
 ```sh
 npm ci
