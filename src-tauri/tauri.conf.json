@@ -1,0 +1,73 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "etabli-branchxo",
+  "version": "../package.json",
+  "identifier": "com.raban.branchxo",
+  "build": {
+    "beforeDevCommand": "npx expo start --port 19006",
+    "devUrl": "http://localhost:19006",
+    "beforeBuildCommand": "npm run export -- --platform web",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "branchxo",
+        "width": 480,
+        "height": 800,
+        "minWidth": 360,
+        "minHeight": 600,
+        "center": true,
+        "resizable": true,
+        "preventOverflow": true,
+        "backgroundColor": "#0b1020"
+      }
+    ],
+    "security": {
+      "csp": {
+        "default-src": "'self'",
+        "script-src": "'self' 'wasm-unsafe-eval'",
+        "style-src": "'self' 'unsafe-inline'",
+        "img-src": "'self' data: blob:",
+        "font-src": "'self' data:",
+        "connect-src": "'self'",
+        "object-src": "'none'",
+        "base-uri": "'none'",
+        "form-action": "'none'"
+      },
+      "dangerousDisableAssetCspModification": ["style-src"]
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["deb", "appimage", "msi", "nsis", "app", "dmg"],
+    "icon": [
+      "icons/icon.png",
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "category": "BoardGame",
+    "shortDescription": "Multiverse tic-tac-toe",
+    "longDescription": "Tic-tac-toe on a branching timeline: scrub back to any past move and fork a parallel universe. Plays offline; saved games stay on this computer.",
+    "publisher": "R. Heller",
+    "copyright": "Copyright 2026 R. Heller",
+    "license": "Apache-2.0",
+    "licenseFile": "../LICENSE",
+    "homepage": "https://github.com/etabli-dev/etabli-branchxo",
+    "linux": {
+      "deb": {
+        "section": "games",
+        "files": {
+          "/usr/share/doc/etabli-branchxo/copyright": "../LICENSE"
+        }
+      }
+    },
+    "macOS": {
+      "signingIdentity": "-"
+    }
+  }
+}
