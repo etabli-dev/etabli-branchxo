@@ -81,6 +81,7 @@ libayatana-appindicator3-dev librsvg2-dev`). Then:
 npm ci
 npm run desktop:dev                              # Expo dev server + debug window
 npm run desktop:build -- --bundles deb,appimage  # Linux packages
+npm run desktop:build -- --bundles dmg           # macOS package for this Mac
 ```
 
 `desktop:build` runs the web export first and embeds `dist/` in the binary; the
@@ -234,9 +235,12 @@ See [DECISIONS.md](./DECISIONS.md) for design notes.
 
 Android and iOS are the primary targets; Linux, Windows and macOS run the same
 game in the desktop shell; the web export is a bonus. Android development APKs
-build in CI and passed an emulator journey. iOS has not been built natively. The
-Linux desktop packages were built and started locally; the Windows and macOS
-packages are set up to build in CI but have not been built yet. No store listing
+build in CI and passed an earlier emulator journey. Current local debug/release
+APKs, AAB and Android lint gates also pass; these use development signing. The unsigned iPhone Release now compiles
+locally; device and TestFlight runs remain open ([Apple audit](docs/apple-audit-2026-11-08.md)). The
+Linux desktop packages were built and started locally; baseline Windows and universal macOS
+packages passed CI. A local arm64 macOS DMG also passed integrity and signature
+checks; native interactive acceptance remains open. No store listing
 or desktop release exists; the only published binary is the older debug-signed
 APK in the `v0.1.0` pre-release. The [platform roadmap](docs/platform-roadmap.md)
 lists the exact state, signing prerequisites and milestones for every platform.
@@ -245,7 +249,7 @@ lists the exact state, signing prerequisites and milestones for every platform.
 
 ```sh
 npm run check
-npx expo install --check
+npm run check:expo
 npm run export -- --platform all
 npx playwright install chromium
 npm run test:browser

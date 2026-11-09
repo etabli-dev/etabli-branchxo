@@ -1,6 +1,8 @@
 # Platform roadmap
 
-Status as of 2026-11-08. This page plans branchxo for Ubuntu/Debian, Windows,
+Status as of 2026-11-09. See the
+[Apple platform audit](apple-audit-2026-11-08.md) for native build and desktop-layout
+verification. This page plans branchxo for Ubuntu/Debian, Windows,
 macOS, iOS and Android, with the browser build as a bonus. It separates what has
 been built and checked from what is only configured. "CI only" means a workflow
 exists but its result has not been observed yet.
@@ -27,11 +29,11 @@ and no synchronisation between devices.
 
 | Platform | Status | Technology | How it is built | What is verified | Distribution |
 |---|---|---|---|---|---|
-| Ubuntu/Debian | Desktop shell added; unsigned packages | Tauri 2.12 (WebKitGTK 4.1) around the Expo web export | `npm run desktop:build -- --bundles deb,appimage`; CI job `desktop.yml` on `ubuntu-24.04` | Locally on Ubuntu 26.04 x86_64 (2026-11-08): `.deb` and AppImage build, `dpkg-deb -I/-c`, launch under Xvfb (window 480×800, alive after 10 s, no panic), five-move hotseat win in the shell, relaunch keeps the game, AppImage launch, `desktop:dev` launch. Not verified: a real desktop session with GPU, installation with `apt`, other distributions; CI job not run yet | None (CI artifact once pushed) |
-| Windows | Configured, not built | Tauri 2.12 (WebView2) | CI job `desktop.yml` on `windows-latest`: MSI (WiX) and NSIS `.exe` | Not verified locally (CI only) | None |
-| macOS | Configured, not built | Tauri 2.12 (WKWebView), universal binary | CI job `desktop.yml` on `macos-15`: DMG, ad-hoc signed | Not verified locally (CI only) | None |
-| iOS | Prepared for EAS, never built natively | Expo SDK 58, React Native 0.88.1, bundle ID `com.raban.branchxo` | EAS Build (`eas.json` profiles) or `npx expo run:ios` on a Mac with Xcode 26.4+ | iOS JavaScript bundle export (`npm run export -- --platform all`) in CI run [41490177585](https://github.com/etabli-dev/etabli-branchxo/actions/runs/41490177585). No native compile, simulator or device run; no EAS project linked | None |
-| Android | Development APKs build in CI | Expo prebuild + Gradle, package `com.raban.branchxo`, min API 24, target API 36 | CI job `android` in `checks.yml`: debug and standalone release APK (Android Debug key) | CI run 41490177585 (APKs, permission gate, embedded bundle); emulator journey on API 35 ARM64 on 2026-11-02 ([refinement record](refinement-2026-10.md)). Not verified: physical device, native AI cancellation, 16 KiB device, release signing, AAB | GitHub pre-release [v0.1.0](https://github.com/etabli-dev/etabli-branchxo/releases/tag/v0.1.0) (2026-06-24): debug-signed universal APK built before the SDK 58 refinement, so it lacks the October–November changes. CI artifacts are labelled development. No store listing |
+| Ubuntu/Debian | Desktop shell added; unsigned packages | Tauri 2.12 (WebKitGTK 4.1) around the Expo web export | `npm run desktop:build -- --bundles deb,appimage`; CI job `desktop.yml` on `ubuntu-24.04` | Locally on Ubuntu 26.04 x86_64 (2026-11-08): `.deb` and AppImage build, `dpkg-deb -I/-c`, launch under Xvfb (window 480×800, alive after 10 s, no panic), five-move hotseat win in the shell, relaunch keeps the game, AppImage launch, `desktop:dev` launch. Not verified: a real desktop session with GPU, installation with `apt`, other distributions; baseline desktop CI [passed](https://github.com/etabli-dev/etabli-branchxo/actions/runs/42525631266); current changes await a new run | None (CI artifact once pushed) |
+| Windows | Baseline packages built in CI; native acceptance open | Tauri 2.12 (WebView2) | CI job `desktop.yml` on `windows-latest`: MSI (WiX) and NSIS `.exe` | Baseline desktop CI [passed](https://github.com/etabli-dev/etabli-branchxo/actions/runs/42525631266); not run locally, current changes await a new run | None |
+| macOS | Local arm64 DMG built; GUI acceptance open | Tauri 2.12 (WKWebView), universal binary | CI job `desktop.yml` on `macos-15`: DMG, ad-hoc signed | Local arm64 DMG integrity and extracted app strict ad-hoc signature checks passed on 2026-11-09; interactive GUI blocked ([audit](apple-audit-2026-11-08.md)); no Intel runtime test | None |
+| iOS | Unsigned native Release compiled; EAS not linked | Expo SDK 58, React Native 0.88.1, bundle ID `com.raban.branchxo` | EAS Build (`eas.json` profiles) or `npx expo run:ios` on a Mac with Xcode 26.4+ | iOS JavaScript bundle export (`npm run export -- --platform all`) in CI run [41490177585](https://github.com/etabli-dev/etabli-branchxo/actions/runs/41490177585). Unsigned arm64 iPhoneOS Release compiled locally on 2026-11-09 with Xcode 27.2 and an embedded game bundle ([audit](apple-audit-2026-11-08.md)); no simulator or device run, no EAS project linked | None |
+| Android | Local APKs/AAB and lint passed; development signing | Expo prebuild + Gradle, package `com.raban.branchxo`, min API 24, target API 36 | CI job `android` in `checks.yml`: debug/release APK, release AAB, lint/model checks (Android Debug key) | CI run 41490177585 (APKs, permission gate, embedded bundle); emulator journey on API 35 ARM64 on 2026-11-02 ([refinement record](refinement-2026-10.md)). Local arm64 debug/release APK and AAB builds, lint/model gates, package permissions and 16 KiB ZIP/ELF alignment passed on 2026-11-09 ([audit](apple-audit-2026-11-08.md)). Not verified: physical device, native AI cancellation, 16 KiB device runtime, release signing | GitHub pre-release [v0.1.0](https://github.com/etabli-dev/etabli-branchxo/releases/tag/v0.1.0) (2026-06-24): debug-signed universal APK built before the SDK 58 refinement, so it lacks the October–November changes. CI artifacts are labelled development. No store listing |
 | Web (bonus) | Export works | `react-native-web` + local CanvasKit (WASM) | `npm run export -- --platform web` → `dist/` | Two Playwright Chromium journeys in CI and locally (2026-11-08), also with the desktop shell's CSP applied | Not hosted (GitHub Pages serves the documentation only) |
 
 Notes on the existing release documents: `STORE-LISTING.md` holds usable store
@@ -39,16 +41,25 @@ copy. `SUBMISSION-branchxo.md` (2026-06-23) predates the SDK 58 refinement in
 places: the app version is `0.1.0` (not `1.0.0`), there is no
 `extra.eas.projectId` (placeholder identifiers were removed), its `expo-doctor`
 and Xcode notes refer to SDK 51, and its gate results (49 tests) are older than the
-current 62 tests.
+current 63 tests.
 `eas.json` still contains placeholder submit values (`YOUR_APPLE_ID@example.com`,
 `REPLACE_WITH_APP_STORE_CONNECT_APP_ID`, `REPLACE_WITH_APPLE_TEAM_ID`) and expects
 `./google-service-account.json` (git-ignored, not present).
 
-CI note: on 2026-11-08 `npx expo install --check`, a step of the existing
-*Application checks* workflow, reports newer SDK 58 patches (`expo` 58.0.23,
-`expo-splash-screen` 58.0.13, `react-native-safe-area-context` 5.11.1, all
-published on 2026-11-03). The next run of that workflow will fail at this step
-until the patch set is adopted; this is independent of the desktop shell.
+The raw Expo checker recommends `expo` 58.0.23, `expo-splash-screen` 58.0.13
+and `react-native-safe-area-context` 5.11.1, published on 3 November. CI now runs
+`npm run check:expo`, which delegates to that checker and permits only the reviewed
+58.0.22 → 58.0.23, 58.0.12 → 58.0.13 and 5.10.1 → 5.11.1 recommendations until
+2026-11-17 00:00 UTC, under the two-week dependency age rule. Unknown mismatches,
+extra diagnostics, tool failures and expired exceptions still fail. Ten offline
+fixtures exercise these boundaries. This temporary quarantine is distinct from
+native compatibility, which is checked by the builds in the
+[Apple platform audit](apple-audit-2026-11-08.md). No dependency versions changed.
+
+The [dependency review](dependency-audit-2026-11-09.md) tracks the remaining
+three npm advisories and their upstream/age constraints separately from Expo
+compatibility. Recheck eligible upstream fixes after 10 November; the current
+parent ranges still need a compatible upstream update.
 
 ## 3. Architecture
 
@@ -122,7 +133,7 @@ platform.
   `WINDOWS_CERTIFICATE` (base64 PFX) and `WINDOWS_CERTIFICATE_PASSWORD`, or the
   Azure signing credentials used by a `bundle.windows.signCommand`.
 - **CI job:** `desktop.yml`, `windows-latest`, artifact
-  `branchxo-desktop-windows-x64`. Not verified locally (CI only).
+  `branchxo-desktop-windows-x64`. Baseline desktop CI [passed](https://github.com/etabli-dev/etabli-branchxo/actions/runs/42525631266); not run locally, current changes await a new run.
 - **Acceptance:** CI green; on Windows 11 x64 both installers install, the Start
   menu entry starts the game, the journey above passes, uninstall removes the
   program; SmartScreen behaviour of the unsigned build is recorded.
@@ -143,7 +154,8 @@ platform.
   (app-specific password)/`APPLE_TEAM_ID`. Tauri signs and notarizes when they are
   set. The same membership covers iOS.
 - **CI job:** `desktop.yml`, `macos-15`, artifact
-  `branchxo-desktop-macos-universal`. Not verified locally (CI only).
+  `branchxo-desktop-macos-universal`. Local arm64 package checks passed;
+  interactive acceptance and Intel runtime remain open ([audit](apple-audit-2026-11-08.md)).
 - **Acceptance:** CI green; the DMG opens on Apple Silicon and Intel Macs, the app
   runs the journey above; after signing, `spctl -a -vv` reports a notarized
   Developer ID app and it opens without warnings.
@@ -155,7 +167,7 @@ platform.
   has three profiles: `development` (development client, internal distribution),
   `preview` (internal, iOS simulator build) and `production` (auto-incremented
   build numbers, `m-medium` builder). `appVersionSource` is `remote`.
-- **What is missing:** no EAS project is linked, no native iOS build has ever run,
+- **What is missing:** no EAS project is linked; signed builds and device runs remain open.
   `expo-dev-client` is not installed (the `development` profile needs it), and
   `expo-updates` is not installed, so the profile channels have no effect (OTA
   updates are not planned). Store screenshots are open. `SUBMISSION-branchxo.md`
@@ -171,9 +183,9 @@ platform.
   `com.raban.branchxo`, the real `appleId`, `ascAppId` and `appleTeamId` in
   `eas.json` (or an App Store Connect API key via `eas credentials`), a hosted
   privacy policy URL, iPhone and iPad screenshots.
-- **CI job:** none in this repository; EAS builds on Expo's servers. Optional
-  later: a manual GitHub job running `eas build --non-interactive` with an
-  `EXPO_TOKEN` secret.
+- **CI job:** `ios.yml` compiles an unsigned iPhone Release after Expo prebuild
+  and CocoaPods. Its first remote run is pending; it needs no EAS account. EAS
+  remains the configured path for signed TestFlight builds.
 - **Acceptance:** the TestFlight build installs on a physical iPhone and iPad;
   hotseat win → force quit → relaunch keeps the game; branch; vs-computer reply and
   cancellation on reset; VoiceOver reads cell and node labels.
@@ -181,8 +193,9 @@ platform.
 ### Android
 
 - **What exists:** CI builds a debug APK (needs Metro) and a standalone release
-  APK with the embedded bundle, both signed with the public Android Debug key, and
-  checks their permissions and bundle. The only published binary is the older
+  APK with the embedded bundle, plus a release AAB, all signed with the public
+  Android Debug key. It checks APK permissions, the embedded bundle and
+  debug/release lint with their generated models. The only published binary is the older
   debug-signed APK in the `v0.1.0` pre-release, which the documentation site links
   as "Download v0.1.0 (APK)". `eas.json` builds an APK in `preview` and an
   AAB in `production`; `submit.production.android` targets the `internal` track
@@ -222,8 +235,9 @@ web page.
 
 ## 5. Milestones
 
-1. **M1 – CI green.** Adopt the SDK 58 patch set named in the CI note (from
-   2026-11-17 it meets the two-week dependency age rule), push, and get
+1. **M1 – CI green.** Verify the current changes with the strict dated Expo
+   policy gate, then adopt the reviewed SDK 58 patches on or after 2026-11-17
+   when they meet the two-week age rule. Push and get
    *Application checks* and `desktop.yml` green on `ubuntu-24.04`,
    `windows-latest` and `macos-15`. Exit: all jobs green and artifacts with the
    expected file names (`etabli-branchxo_0.1.0_amd64.deb`, AppImage, MSI, NSIS
@@ -235,7 +249,8 @@ web page.
 3. **M3 – Windows and macOS acceptance of unsigned builds.** Windows 11 x64 and
    one Apple Silicon Mac. Exit: journeys pass; SmartScreen/Gatekeeper behaviour
    documented in the README.
-4. **M4 – EAS project and first iOS build.** `eas init`, `preview` simulator build,
+4. **M4 – EAS project and signed iOS acceptance.** The first local unsigned native
+   Release compile passed; `eas init`, `preview` simulator build,
    `production` build, TestFlight internal test on iPhone and iPad. Exit: iOS
    acceptance list passes.
 5. **M5 – Android release signing.** Release keystore (EAS-managed or owner-held),
@@ -247,9 +262,10 @@ web page.
    only job with `contents: write`. Exit: signed artifacts open without warnings.
 7. **M7 – Store submissions.** Final icon art, screenshots, hosted privacy policy,
    App Store review and Play production rollout. Exit: both listings live.
-8. **M8 – Desktop layout (optional).** Wider-window layout in the shared code,
-   keyboard play, remembered window size (would add `tauri-plugin-window-state`
-   and one capability). Exit: e2e covers a desktop-sized viewport.
+8. **M8 – Desktop layout (partial).** The wider-window board/settings layout and
+   1280 × 800 browser regression are implemented and checked. Keyboard-specific
+   navigation and remembered window size remain open; the latter would add
+   `tauri-plugin-window-state` and one capability.
 
 M1–M3 need no accounts and can start immediately; M4–M7 depend on the owner
 decisions below.

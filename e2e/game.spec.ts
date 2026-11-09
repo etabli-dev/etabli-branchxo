@@ -32,3 +32,16 @@ test('a failed drawing-engine load is explained', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('alert')).toContainText('drawing engine could not be loaded');
 });
+
+
+test('desktop game and settings share a wide window', async ({ page }, info) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: 'Cell 9, empty', exact: true })).toBeInViewport();
+  const b = await page.getByTestId('game-board').boundingBox();
+  const s = await page.getByTestId('game-settings').boundingBox();
+  expect(b).not.toBeNull(); expect(s).not.toBeNull();
+  expect(s!.x).toBeGreaterThanOrEqual(b!.x + b!.width);
+  expect(s!.x + s!.width).toBeLessThanOrEqual(1280);
+  await page.screenshot({ path: info.outputPath('desktop.png') });
+});

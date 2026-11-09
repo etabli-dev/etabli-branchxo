@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
-import { AppState, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AppState, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { hydrate, useAppStore } from './src/state';
@@ -19,6 +19,8 @@ import {
 import { colors, fonts, spacing } from './src/ui';
 
 export default function App() {
+  const { width, height } = useWindowDimensions();
+  const wide = width >= 900 && height >= 600;
   const view = useAppStore((s) => s.view);
   const storageError = useAppStore((s) => s.storageError);
   const hydrated = useAppStore((s) => s.hydrated);
@@ -53,7 +55,7 @@ export default function App() {
           </View>
 
           <ScrollView
-            contentContainerStyle={styles.main}
+            contentContainerStyle={[styles.main, wide && styles.wideMain]}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
@@ -61,6 +63,7 @@ export default function App() {
               <Text style={styles.dim}>loading…</Text>
             ) : (
               <>
+                <View testID="game-board" style={wide ? styles.wideGame : styles.game}>
                 {view === 'board' && (
                   <>
                     <BoardView />
@@ -76,8 +79,9 @@ export default function App() {
                 )}
                 {view === 'tree' && <MultiverseTree />}
                 {view === 'heat' && <HeatView />}
+                </View>
 
-                <View style={styles.settings}>
+                <View testID="game-settings" style={[styles.settings, wide && styles.sidebar]}>
                   <Text style={styles.sectionTitle}>Settings</Text>
                   <SettingsPanel />
                 </View>
@@ -99,6 +103,10 @@ const styles = StyleSheet.create({
   sub: { ...fonts.small, color: colors.textDim },
   switcher: { paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },
   main: { paddingBottom: spacing.xl },
+  wideMain: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', gap: spacing.lg },
+  game: {},
+  wideGame: { flex: 1, maxWidth: 620 },
+  sidebar: { width: 340, paddingTop: 0 },
   dim: { ...fonts.small, color: colors.textDim, padding: spacing.md },
   settings: { paddingTop: spacing.lg },
   sectionTitle: { ...fonts.label, color: colors.text, paddingHorizontal: spacing.md, marginBottom: spacing.sm },

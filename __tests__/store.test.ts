@@ -310,3 +310,19 @@ describe('saved game recovery', () => {
     expect(fullMoves(s.tree, s.activeUniverseId).map(m => m.cell)).toEqual([4, 0]);
   });
 });
+
+
+it('cancelled AI work can restart after the screen remounts', async () => {
+  useAppStore.getState().setMode('hotseat');
+  useAppStore.getState().newGame();
+  useAppStore.getState().attemptPlay(4);
+  useAppStore.setState({ mode: 'vs-computer', aiMark: 'O', aiLevel: 'easy' });
+  const oldRun = useAppStore.getState().triggerAiMove();
+  expect(useAppStore.getState().aiThinking).toBe(true);
+  cancelBackgroundWork();
+  await oldRun;
+  expect(useAppStore.getState().aiThinking).toBe(false);
+  await useAppStore.getState().triggerAiMove();
+  const state = useAppStore.getState();
+  expect(fullMoves(state.tree, state.activeUniverseId)).toHaveLength(2);
+});

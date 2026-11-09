@@ -460,6 +460,7 @@ export function cancelBackgroundWork(): void {
   cancelProbRecompute();
   if (saveTimer) clearTimeout(saveTimer);
   saveTimer = null;
+  useAppStore.setState({ aiThinking: false });
 }
 
 /** Hydrate state from AsyncStorage at app start. */
