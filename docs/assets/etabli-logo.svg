@@ -1,4 +1,12 @@
-<svg width="32" height="32" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Etabli">
-  <rect x="2" y="2" width="24" height="24" rx="6" fill="#28A745"/>
-  <rect x="9" y="9" width="10" height="10" rx="2" fill="none" stroke="#fff" stroke-width="2"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 1024 1024" role="img" aria-label="Établi">
+  <!-- Établi Établi icon. Coder design system: #28A745 tile, white glyph, one-line glyph ≈70% of the tile, stroke 44 @1024 (aligned to the suite icon, Nov 2026). -->
+  <defs><clipPath id="tile"><rect width="1024" height="1024" rx="225"/></clipPath></defs>
+  <rect width="1024" height="1024" rx="225" fill="#28A745"/>
+  <g clip-path="url(#tile)"><g transform="translate(512,512) scale(1.40000) translate(-512.00,-532.50)">
+  <g stroke-width="31.429" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 382 792 H 308 A 36 36 0 0 1 272 756 V 400 A 36 36 0 0 1 308 364 H 716 A 36 36 0 0 1 752 400 V 756 A 36 36 0 0 1 716 792 H 667 A 36 36 0 0 1 631 756 V 716 A 36 36 0 0 0 595 680 H 450 A 36 36 0 0 1 414 644 V 484 A 36 36 0 0 1 450 448 H 610" fill="none" stroke="#FFFFFF"/>
+    <line x1="414" y1="564" x2="590" y2="564" fill="none" stroke="#FFFFFF"/>
+    <line x1="488" y1="364" x2="556" y2="273" fill="none" stroke="#FFFFFF"/>
+  </g>
+  </g></g>
 </svg>

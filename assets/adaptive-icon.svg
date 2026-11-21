@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <!-- safe zone occupies inner 672x672; background is set in app.json -->
-  <g transform="translate(176,176)" stroke="#7dd3fc" stroke-width="20" fill="none" stroke-linecap="round">
-    <line x1="336" y1="600" x2="336" y2="360"/>
-    <line x1="336" y1="360" x2="160" y2="200"/>
-    <line x1="336" y1="360" x2="512" y2="200"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-label="BranchXO">
+  <!-- Établi BranchXO icon. Coder design system: #28A745 tile, white glyph, one-line glyph ≈70% of the tile, stroke 44 @1024 (aligned to the suite icon, Nov 2026). -->
+  <rect width="1024" height="1024" fill="#28A745"/>
+  <g transform="translate(512,512) scale(0.95963) translate(-489.25,-503.75)">
+  <g stroke-width="29.345" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 300 512 H 452 L 577.6 386.4 A 60 60 0 0 1 662.4 301.6 A 60 60 0 0 1 577.6 386.4" fill="none" stroke="#FFFFFF"/>
+    <line x1="452" y1="512" x2="662" y2="722" fill="none" stroke="#FFFFFF"/>
+    <line x1="662" y1="638" x2="578" y2="722" fill="none" stroke="#FFFFFF"/>
   </g>
-  <g fill="#3b82f6"><circle cx="336" cy="776" r="48"/></g>
-  <g fill="#f59e0b"><circle cx="688" cy="376" r="48"/></g>
-  <g fill="#a78bfa"><circle cx="336" cy="536" r="48"/></g>
+  </g>
 </svg>
