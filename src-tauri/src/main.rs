@@ -1,5 +1,5 @@
 // Copyright 2026 R. Heller
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: LicenseRef-Proprietary
 
 // Desktop shell: a single window that loads the bundled web export of the game.
 // No commands, plugins or capabilities are registered; the game runs offline.
