@@ -261,3 +261,15 @@ networking blocked. Read [the refinement record](docs/refinement-2026-10.md)
 for observed results, dependency audit findings, and device/iOS/store
 requirements. There is no configured EAS project or store
 submission in this checkout. Link your own EAS project before using EAS Build.
+
+## License
+
+GNU Affero General Public License v3.0 only (AGPL-3.0-only) — see [LICENSE](LICENSE).
+Commercial licences are available from the copyright holder (etabli.dev@outlook.com).
+Third-party components keep their own licences. Versions published before
+22 November 2026 remain available under Apache-2.0.
+
+Contributions can only be accepted under a written contributor agreement that allows
+the copyright holder to offer both licences; please open an issue first.
+
+Copyright 2026 R. Heller.
