@@ -64,7 +64,7 @@ website:
             - text: "Rundgang"
               href: de/index.qmd
   page-footer:
-    left: "Apache-2.0 · © 2026 R. Heller"
+    left: "AGPL-3.0-only · © 2026 R. Heller"
     right:
       - text: "établi suite"
         href: "https://github.com/etabli-dev"
