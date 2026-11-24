@@ -98,3 +98,62 @@ single root rather than crash.
 - `src/state/store.ts` — Zustand store wiring everything together with
   AsyncStorage hydrate/persist.
 - `src/views/MultiverseTree.tsx` — the headline visualization.
+
+## Appearance and app language (2026-11-24)
+
+Settings now ends with an **Appearance** section, the suite-wide setting of the
+native Établi apps (`etabli-doc/ios/App/AppearanceModel.swift`), drawn with the
+game's own segmented controls:
+
+- **App language:** System / Deutsch / English. "System" follows the device's
+  preferred languages (iOS `AppleLanguages`, including a per-app language set in
+  iOS Settings; `navigator.languages` on the web) and falls back to English.
+  Every string lives in `src/i18n/strings.ts` (no i18n library: two typed
+  catalogues, checked for equal keys by a unit test). The UI switches at once.
+  The game shows no system dialogs, so it does not write `AppleLanguages`;
+  `CFBundleLocalizations` (en, de) lets iOS offer the per-app language.
+- **Mode:** System / Light / Dark (`Appearance.setColorScheme`, so native
+  sheets follow too) and seven **accent colours** in the owner's order of
+  2026-11-24 (Coder blue default, green, yellow, orange, red, purple, graphite).
+- Stored under `appearance.mode`, `appearance.accent` and `app.language` with
+  the native apps' raw values, separately from the saved game (`branchxo:v2`):
+  a preserved unreadable save never resets them. Unknown values, including the
+  removed `teal` and `brown`, fall back to the defaults.
+- On iOS, launch arguments such as `-appearance.mode dark -appearance.accent
+  yellow -app.language de` set the starting values, as in the native apps; the
+  simulator tours use this.
+
+### The game palette stays on the game surfaces
+
+BranchXO's colours carry game meaning: the Okabe–Ito X (blue cross) / O (orange
+ring) pair, the outcome colours shared by the board, timeline, tree nodes and
+outcome chips, and the viridis heat scale. They were designed for the navy game
+ground; on the light Hugo Coder background the orange O and the O-win yellow
+would drop well below 3:1, and changing them per mode would break the match
+between the chips and the tree. So the **game surfaces keep the fixed game
+palette in both modes**: the board, the timeline mini-boards, the multiverse
+tree, the heat map, the probability chart and the outcome chips are navy tiles,
+including their own cyan in-game highlight (top-move halos, active tree path,
+turning point).
+
+The **mode and accent apply to the UI chrome** around them: background, text
+and panels use the Hugo Coder neutrals (#FAFAFA / #212121 text and so on); the
+accent marks selected segments (an accent border on a selection fill), the hint
+toggles, the selected timeline ply ring, the *New game* outline and the
+*Branch* button. Selection fills are the accent at 16 % over the surface,
+except for yellow and orange, which use the neutral text colour (owner rule: no
+yellow shade in any background). Text on an accent fill is white in light mode
+and #212121 in dark mode. `__tests__/appearance.test.ts` checks the colour
+table, 4.5:1 contrast of every accent against the background and with its
+on-accent text, the chrome text on every selection fill, and that no tint lies
+in the 30–70° hue range.
+
+### One-line labels
+
+Buttons, segments, chips and toggles keep one line down to a 375-pt iPhone SE
+in both languages by design; the final simulator screenshot review is pending. Where a German label
+was too long, the visible label is shorter and the full text is the
+accessibility label: *Universen* (Multiversum), *Verlauf* (Zeitverlauf),
+*Zu zweit* (Zu zweit an einem Gerät), *Gegen Computer* (Gegen den Computer),
+*Perfektes Spiel* / *Zufallsspiel* (Gegen …). The iOS home-screen name is
+*BranchXO* (it was the truncated project name `etabli-branchxo`).

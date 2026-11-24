@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, fonts, radii, spacing } from './theme';
+import { fonts, radii, spacing } from './theme';
+import { useChrome } from './useChrome';
 
 export interface SegmentedControlProps<T extends string> {
   readonly options: readonly { value: T; label: string; accessibilityLabel?: string }[];
@@ -9,10 +10,15 @@ export interface SegmentedControlProps<T extends string> {
   readonly testID?: string;
 }
 
+/**
+ * One-line segments: each visible label is short enough for a 375-pt screen in both languages
+ * (`numberOfLines` only guards the layout); the full text is the accessibility label.
+ */
 export function SegmentedControl<T extends string>(props: SegmentedControlProps<T>) {
   const { options, value, onChange, testID } = props;
+  const c = useChrome();
   return (
-    <View style={styles.container} testID={testID}>
+    <View style={[styles.container, { backgroundColor: c.surface, borderColor: c.border }]} testID={testID}>
       {options.map((opt) => {
         const selected = opt.value === value;
         return (
@@ -22,9 +28,18 @@ export function SegmentedControl<T extends string>(props: SegmentedControlProps<
             accessibilityRole="button"
             accessibilityState={{ selected }}
             accessibilityLabel={opt.accessibilityLabel ?? opt.label}
-            style={[styles.segment, selected && styles.segmentSelected]}
+            testID={testID ? `${testID}.${opt.value}` : undefined}
+            style={[
+              styles.segment,
+              selected && { backgroundColor: c.selection, borderColor: c.accent },
+            ]}
           >
-            <Text style={[styles.label, selected && styles.labelSelected]}>{opt.label}</Text>
+            <Text
+              numberOfLines={1}
+              style={[styles.label, { color: selected ? c.text : c.textDim }, selected && styles.labelSelected]}
+            >
+              {opt.label}
+            </Text>
           </Pressable>
         );
       })}
@@ -35,27 +50,23 @@ export function SegmentedControl<T extends string>(props: SegmentedControlProps<
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: colors.bgElev,
     borderRadius: radii.md,
     padding: 3,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   segment: {
     flex: 1,
     paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: spacing.xs,
     borderRadius: radii.sm,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
     alignItems: 'center',
-  },
-  segmentSelected: {
-    backgroundColor: colors.panel,
   },
   label: {
     ...fonts.label,
-    color: colors.textDim,
   },
   labelSelected: {
-    color: colors.text,
+    fontWeight: '700',
   },
 });

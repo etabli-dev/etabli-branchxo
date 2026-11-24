@@ -11,8 +11,11 @@ making a different move at any past ply. The full game state is therefore a
 
 ---
 
-The game uses a fixed dark palette; changing the device light/dark setting
-does not switch the game theme.
+Settings → **Appearance** offers the app language (System / Deutsch /
+English), System / Light / Dark and an accent colour, the same setting as in
+the other Établi apps. The board, timeline, multiverse tree, heat map, chart and
+outcome chips keep the fixed game palette in both modes; the mode and accent
+colour the surrounding interface ([DECISIONS.md](DECISIONS.md#appearance-and-app-language-2026-11-24)).
 
 ## Run
 

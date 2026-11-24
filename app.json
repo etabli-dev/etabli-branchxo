@@ -23,7 +23,12 @@
       "bundleIdentifier": "com.raban.branchxo",
       "buildNumber": "1",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDisplayName": "BranchXO",
+        "CFBundleLocalizations": [
+          "en",
+          "de"
+        ]
       },
       "config": {
         "usesNonExemptEncryption": false

@@ -2,7 +2,8 @@ import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, Pressable, Text, View } from 'react-native';
 import { Canvas, Circle, Group, Path, Skia } from '@shopify/react-native-skia';
 import { useAppStore } from '../state';
-import { colors, fonts, radii, spacing } from '../ui';
+import { Strings, useStrings } from '../i18n';
+import { fonts, game, radii, spacing, useChrome } from '../ui';
 import { Universe, childrenOf, pathToRoot, summarize } from '../multiverse';
 
 const NODE_R = 20;
@@ -79,16 +80,18 @@ function layoutTree(tree: ReturnType<typeof useAppStore.getState>['tree']): {
 
 function nodeColor(u: Universe): string {
   if (u.status.kind === 'win') {
-    return u.status.winner === 'X' ? colors.outcomeXWin : colors.outcomeOWin;
+    return u.status.winner === 'X' ? game.outcomeXWin : game.outcomeOWin;
   }
-  if (u.status.kind === 'draw') return colors.outcomeDraw;
-  return colors.outcomeOpen;
+  if (u.status.kind === 'draw') return game.outcomeDraw;
+  return game.outcomeOpen;
 }
 
 export function MultiverseTree() {
   const tree = useAppStore((s) => s.tree);
   const activeId = useAppStore((s) => s.activeUniverseId);
   const setActiveUniverse = useAppStore((s) => s.setActiveUniverse);
+  const t = useStrings();
+  const c = useChrome();
 
   const layout = useMemo(() => layoutTree(tree), [tree]);
   const activePath = useMemo(() => new Set(pathToRoot(tree, activeId).map((u) => u.id)), [tree, activeId]);
@@ -96,14 +99,14 @@ export function MultiverseTree() {
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.title}>Multiverse</Text>
+      <Text style={[styles.title, { color: c.text }]} accessibilityRole="header">{t.multiverseTitle}</Text>
       <View style={styles.summaryRow}>
-        <SummaryBadge label={`X wins ${summary.xWins}`} color={colors.outcomeXWin} />
-        <SummaryBadge label={`O wins ${summary.oWins}`} color={colors.outcomeOWin} />
-        <SummaryBadge label={`draws ${summary.draws}`} color={colors.outcomeDraw} />
-        <SummaryBadge label={`open ${summary.open}`} color={colors.outcomeOpen} />
+        <SummaryBadge label={t.badgeXWins(summary.xWins)} color={game.outcomeXWin} />
+        <SummaryBadge label={t.badgeOWins(summary.oWins)} color={game.outcomeOWin} />
+        <SummaryBadge label={t.badgeDraws(summary.draws)} color={game.outcomeDraw} />
+        <SummaryBadge label={t.badgeOpen(summary.open)} color={game.outcomeOpen} />
       </View>
-      <ScrollView horizontal>
+      <ScrollView horizontal style={styles.tile}>
         <ScrollView>
           <View style={{ width: layout.width, height: layout.height }}>
             <Canvas style={{ width: layout.width, height: layout.height }}>
@@ -118,7 +121,7 @@ export function MultiverseTree() {
                   <Path
                     key={`edge-${i}`}
                     path={p.detach()}
-                    color={onActivePath ? colors.accent : outColor}
+                    color={onActivePath ? game.highlight : outColor}
                     style="stroke"
                     strokeWidth={onActivePath ? 3 : 1.5}
                     opacity={onActivePath ? 1 : 0.45}
@@ -143,7 +146,7 @@ export function MultiverseTree() {
                         cx={n.x}
                         cy={n.y}
                         r={NODE_R + 6}
-                        color={colors.accent}
+                        color={game.highlight}
                         style="stroke"
                         strokeWidth={2}
                       />
@@ -159,7 +162,8 @@ export function MultiverseTree() {
                 key={`hit-${n.id}`}
                 onPress={() => setActiveUniverse(n.id)}
                 accessibilityRole="button"
-                accessibilityLabel={`Universe ${n.universe.label}, ${describeStatus(n.universe)}`}
+                accessibilityLabel={t.universeA11y(n.universe.label, describeStatus(n.universe, t))}
+                accessibilityState={{ selected: n.id === activeId }}
                 style={{
                   position: 'absolute',
                   left: n.x - NODE_R,
@@ -176,24 +180,25 @@ export function MultiverseTree() {
   );
 }
 
-function describeStatus(u: Universe): string {
-  if (u.status.kind === 'win') return `${u.status.winner} wins`;
-  if (u.status.kind === 'draw') return 'draw';
-  return `${u.status.toMove} to move`;
+function describeStatus(u: Universe, t: Strings): string {
+  if (u.status.kind === 'win') return t.wins(u.status.winner);
+  if (u.status.kind === 'draw') return t.drawLower;
+  return t.toMove(u.status.toMove);
 }
 
 function SummaryBadge({ label, color }: { label: string; color: string }) {
   return (
     <View style={[styles.badge, { borderColor: color }]}>
       <View style={[styles.dot, { backgroundColor: color }]} />
-      <Text style={styles.badgeText}>{label}</Text>
+      <Text numberOfLines={1} style={styles.badgeText}>{label}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, padding: spacing.md },
-  title: { ...fonts.title, color: colors.text, marginBottom: spacing.sm },
+  title: { ...fonts.title, marginBottom: spacing.sm },
+  tile: { backgroundColor: game.bg, borderRadius: radii.md, borderWidth: 1, borderColor: game.border },
   summaryRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -207,8 +212,8 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: radii.lg,
     borderWidth: 1,
-    backgroundColor: colors.bgElev,
+    backgroundColor: game.bgElev,
   },
   dot: { width: 10, height: 10, borderRadius: 5, marginRight: 6 },
-  badgeText: { ...fonts.small, color: colors.text },
+  badgeText: { ...fonts.small, color: game.text },
 });

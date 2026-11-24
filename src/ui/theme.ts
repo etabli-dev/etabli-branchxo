@@ -1,24 +1,31 @@
-/**
- * Color-blind-safe palette.
- *
- * X / O marks use shape + color so total-color-blindness still distinguishes them
- * (X = saturated blue/cyan, O = saturated orange — Okabe–Ito accessible pairing).
- *
- * Outcome colors:
- *   X-win   → blue
- *   O-win   → orange
- *   draw    → neutral grey
- *   open    → soft purple
- */
+import {
+  ACCENT_VALUES,
+  AccentChoice,
+  CODER_PALETTE,
+  ColorScheme,
+  SELECTION_OPACITY,
+  blend,
+  selectionTint,
+} from '../settings/appearance';
 
-export const colors = {
+/**
+ * The game palette, fixed in both modes (see DECISIONS.md, "Appearance").
+ *
+ * It colours everything drawn on a game surface: the boards, mini-boards, multiverse tree, heat
+ * map, probability chart and outcome chips. X / O use shape + colour so total colour blindness
+ * still distinguishes them (X = blue cross, O = orange ring, an Okabe–Ito pairing).
+ *
+ * Outcome colours: X-win blue, O-win orange, draw neutral grey, open soft purple.
+ */
+export const game = {
   bg: '#0b1020',
   bgElev: '#141a30',
   panel: '#1c2340',
   text: '#eef0fa',
   textDim: '#9aa3c7',
   border: '#2b345c',
-  accent: '#7dd3fc',
+  /** Highlights drawn inside the game surfaces (top-move halos, active tree path, turning point). */
+  highlight: '#7dd3fc',
 
   markX: '#3b82f6', // blue
   markO: '#f59e0b', // orange
@@ -34,6 +41,41 @@ export const colors = {
   heatMid: '#21918c',
   heatHigh: '#fde725',
 } as const;
+
+/** Colours of the UI chrome around the game surfaces: the chosen mode (Hugo Coder neutrals) and accent. */
+export interface Chrome {
+  readonly scheme: ColorScheme;
+  readonly bg: string;
+  readonly surface: string;
+  readonly border: string;
+  readonly text: string;
+  /** Secondary text; at least 4.5:1 on `bg` and `surface`. */
+  readonly textDim: string;
+  readonly accent: string;
+  readonly onAccent: string;
+  /** Opaque selection fill: the selection tint at SELECTION_OPACITY over `surface`. */
+  readonly selection: string;
+  readonly statusBar: 'light' | 'dark';
+}
+
+export const TEXT_DIM = { light: '#5C5C5C', dark: '#B8B8B8' } as const;
+
+export function chromeColors(scheme: ColorScheme, accent: AccentChoice): Chrome {
+  const dark = scheme === 'dark';
+  const surface = dark ? CODER_PALETTE.surfaceDark : CODER_PALETTE.surfaceLight;
+  return {
+    scheme,
+    bg: dark ? CODER_PALETTE.backgroundDark : CODER_PALETTE.backgroundLight,
+    surface,
+    border: dark ? CODER_PALETTE.borderDark : CODER_PALETTE.borderLight,
+    text: dark ? CODER_PALETTE.foregroundDark : CODER_PALETTE.foregroundLight,
+    textDim: TEXT_DIM[scheme],
+    accent: ACCENT_VALUES[accent][scheme],
+    onAccent: dark ? CODER_PALETTE.onAccentDark : CODER_PALETTE.onAccentLight,
+    selection: blend(selectionTint(accent, scheme), surface, SELECTION_OPACITY),
+    statusBar: dark ? 'light' : 'dark',
+  };
+}
 
 export const radii = {
   sm: 6,

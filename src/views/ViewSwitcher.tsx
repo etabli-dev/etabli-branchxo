@@ -1,16 +1,18 @@
 import React from 'react';
+import { useStrings } from '../i18n';
 import { useAppStore, ViewKey } from '../state';
 import { SegmentedControl } from '../ui';
 
-const OPTIONS: readonly { value: ViewKey; label: string }[] = [
-  { value: 'board', label: 'Board' },
-  { value: 'timeline', label: 'Timeline' },
-  { value: 'tree', label: 'Multiverse' },
-  { value: 'heat', label: 'Heat' },
-];
+const KEYS: readonly ViewKey[] = ['board', 'timeline', 'tree', 'heat'];
 
 export function ViewSwitcher() {
   const view = useAppStore((s) => s.view);
   const setView = useAppStore((s) => s.setView);
-  return <SegmentedControl options={OPTIONS} value={view} onChange={setView} />;
+  const t = useStrings();
+  const options = KEYS.map((value) => ({
+    value,
+    label: t.views[value].short,
+    accessibilityLabel: t.views[value].full,
+  }));
+  return <SegmentedControl options={options} value={view} onChange={setView} testID="view" />;
 }

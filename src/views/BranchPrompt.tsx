@@ -1,38 +1,40 @@
 import React from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useStrings } from '../i18n';
 import { useAppStore } from '../state';
-import { colors, fonts, radii, spacing } from '../ui';
+import { fonts, radii, spacing, useChrome } from '../ui';
 
 export function BranchPromptModal() {
   const pending = useAppStore((s) => s.pendingBranch);
   const confirm = useAppStore((s) => s.confirmPendingBranch);
   const cancel = useAppStore((s) => s.cancelPendingBranch);
+  const t = useStrings();
+  const c = useChrome();
 
   return (
     <Modal transparent visible={pending !== null} animationType="fade" onRequestClose={cancel}>
       <View style={styles.backdrop}>
-        <View style={styles.card}>
-          <Text style={styles.title}>Fork a new universe?</Text>
-          <Text style={styles.body}>
-            You scrubbed back to ply {pending?.atPly ?? '?'} and tapped a different cell. This will create
-            a new universe branching from the current one. The original universe is preserved.
-          </Text>
+        <View style={[styles.card, { backgroundColor: c.bg, borderColor: c.border }]} accessibilityViewIsModal>
+          <Text style={[styles.title, { color: c.text }]} accessibilityRole="header">{t.branchTitle}</Text>
+          <Text style={[styles.body, { color: c.textDim }]}>{t.branchBody(pending?.atPly ?? '?')}</Text>
           <View style={styles.row}>
             <Pressable
               onPress={cancel}
               accessibilityRole="button"
-              accessibilityLabel="Cancel branch"
-              style={[styles.btn, styles.btnGhost]}
+              accessibilityLabel={t.cancelBranchA11y}
+              testID="branch.cancel"
+              style={[styles.btn, styles.btnGhost, { borderColor: c.border }]}
             >
-              <Text style={[styles.btnText, { color: colors.textDim }]}>Cancel</Text>
+              <Text numberOfLines={1} style={[styles.btnText, { color: c.text }]}>{t.cancel}</Text>
             </Pressable>
             <Pressable
               onPress={confirm}
               accessibilityRole="button"
-              accessibilityLabel="Confirm branch"
-              style={[styles.btn, styles.btnPrimary]}
+              accessibilityLabel={t.confirmBranchA11y}
+              testID="branch.confirm"
+              style={[styles.btn, { backgroundColor: c.accent }]}
             >
-              <Text style={[styles.btnText, { color: colors.bg }]}>Branch</Text>
+              <Text numberOfLines={1} style={[styles.btnText, { color: c.onAccent }]}>{t.branch}</Text>
             </Pressable>
           </View>
         </View>
@@ -52,17 +54,14 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 360,
-    backgroundColor: colors.panel,
     borderRadius: radii.lg,
     padding: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  title: { ...fonts.title, color: colors.text, marginBottom: spacing.sm },
-  body: { ...fonts.body, color: colors.textDim, marginBottom: spacing.lg },
+  title: { ...fonts.title, marginBottom: spacing.sm },
+  body: { ...fonts.body, marginBottom: spacing.lg },
   row: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm },
   btn: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderRadius: radii.md },
-  btnGhost: { borderWidth: 1, borderColor: colors.border },
-  btnPrimary: { backgroundColor: colors.accent },
+  btnGhost: { borderWidth: 1 },
   btnText: { ...fonts.label },
 });

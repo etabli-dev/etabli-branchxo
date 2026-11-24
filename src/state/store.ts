@@ -16,6 +16,7 @@ import {
 
 export type Mode = 'hotseat' | 'vs-computer';
 export type ViewKey = 'board' | 'timeline' | 'tree' | 'heat';
+export type StorageError = 'save' | 'load';
 
 export interface OverlayFlags {
   X: boolean;
@@ -60,7 +61,8 @@ export interface AppState {
 
   // hydration state
   hydrated: boolean;
-  storageError: string | null;
+  /** A storage failure the UI explains in the chosen language. */
+  storageError: StorageError | null;
 
   // actions
   setView: (v: ViewKey) => void;
@@ -450,7 +452,7 @@ export async function flushSave(): Promise<void> {
     if (useAppStore.getState().storageError !== null) useAppStore.setState({ storageError: null });
   } catch (e) {
     if (__DEV__) console.warn('branchxo: persist failed', e);
-    useAppStore.setState({ storageError: 'Could not save the game. Keep the app open and free some storage.' });
+    useAppStore.setState({ storageError: 'save' });
   }
  }
 
@@ -505,7 +507,7 @@ export async function hydrate(): Promise<void> {
     }
   } catch (e) {
     preserveUnreadSave = true;
-    useAppStore.setState({ storageError: 'The saved game could not be loaded and has been preserved. New game replaces it.' });
+    useAppStore.setState({ storageError: 'load' });
     if (__DEV__) console.warn('branchxo: hydrate failed', e);
   } finally {
     useAppStore.getState()._setHydrated(true);

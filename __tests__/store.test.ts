@@ -290,7 +290,7 @@ describe('saved game recovery', () => {
     useAppStore.getState().setView('tree');
     await flushSave();
     expect(await AsyncStorage.getItem('branchxo:v2')).toBe(corrupt);
-    expect(useAppStore.getState().storageError).toContain('preserved');
+    expect(useAppStore.getState().storageError).toBe('load');
     useAppStore.getState().newGame();
     await flushSave();
     expect(await AsyncStorage.getItem('branchxo:v2')).not.toBe(corrupt);
@@ -299,7 +299,7 @@ describe('saved game recovery', () => {
     useAppStore.getState().attemptPlay(4);
     (AsyncStorage.setItem as jest.Mock).mockRejectedValueOnce(new Error('disk full'));
     await flushSave();
-    expect(useAppStore.getState().storageError).toContain('Could not save');
+    expect(useAppStore.getState().storageError).toBe('save');
     useAppStore.getState().attemptPlay(0);
     await flushSave();
     expect(useAppStore.getState().storageError).toBeNull();

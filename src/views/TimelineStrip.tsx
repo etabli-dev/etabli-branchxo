@@ -4,37 +4,32 @@ import { Canvas, Circle, Group, Path, Skia } from '@shopify/react-native-skia';
 import { useAppStore } from '../state';
 import { fullMoves as canonicalFullMoves } from '../multiverse';
 import { findWinLine } from '../game';
-import { colors, fonts, radii, spacing } from '../ui';
+import { useStrings } from '../i18n';
+import { fonts, game, radii, spacing, useChrome } from '../ui';
 
 const MINI = 56;
 const M_CELL = MINI / 3;
 
 interface MiniBoardProps {
   readonly board: readonly ('X' | 'O' | null)[];
-  readonly highlighted: boolean;
 }
 
-const MiniBoard = React.memo(function MiniBoardImpl({ board, highlighted }: MiniBoardProps) {
+const MiniBoard = React.memo(function MiniBoardImpl({ board }: MiniBoardProps) {
   const winLine = findWinLine(board);
   return (
-    <View
-      style={[
-        styles.mini,
-        highlighted && { borderColor: colors.accent, borderWidth: 2 },
-      ]}
-    >
+    <View style={styles.mini}>
       <Canvas style={{ width: MINI, height: MINI }}>
         {[1, 2].map((i) => (
           <Group key={i}>
             <Path
               path={Skia.PathBuilder.Make().moveTo(i * M_CELL, 0).lineTo(i * M_CELL, MINI).detach()}
-              color={colors.border}
+              color={game.border}
               style="stroke"
               strokeWidth={1}
             />
             <Path
               path={Skia.PathBuilder.Make().moveTo(0, i * M_CELL).lineTo(MINI, i * M_CELL).detach()}
-              color={colors.border}
+              color={game.border}
               style="stroke"
               strokeWidth={1}
             />
@@ -51,7 +46,7 @@ const MiniBoard = React.memo(function MiniBoardImpl({ board, highlighted }: Mini
             p.moveTo(x + 4, y + 4).lineTo(x + M_CELL - 4, y + M_CELL - 4);
             p.moveTo(x + M_CELL - 4, y + 4).lineTo(x + 4, y + M_CELL - 4);
             return (
-              <Path key={idx} path={p.detach()} color={colors.markX} style="stroke" strokeWidth={2} />
+              <Path key={idx} path={p.detach()} color={game.markX} style="stroke" strokeWidth={2} />
             );
           }
           return (
@@ -60,7 +55,7 @@ const MiniBoard = React.memo(function MiniBoardImpl({ board, highlighted }: Mini
               cx={x + M_CELL / 2}
               cy={y + M_CELL / 2}
               r={M_CELL / 2 - 4}
-              color={colors.markO}
+              color={game.markO}
               style="stroke"
               strokeWidth={2}
             />
@@ -74,7 +69,7 @@ const MiniBoard = React.memo(function MiniBoardImpl({ board, highlighted }: Mini
           const p = Skia.PathBuilder.Make();
           p.moveTo(aCol * M_CELL + M_CELL / 2, aRow * M_CELL + M_CELL / 2);
           p.lineTo(cCol * M_CELL + M_CELL / 2, cRow * M_CELL + M_CELL / 2);
-          const color = winLine.winner === 'X' ? colors.outcomeXWin : colors.outcomeOWin;
+          const color = winLine.winner === 'X' ? game.outcomeXWin : game.outcomeOWin;
           return (
             <Path path={p.detach()} color={color} style="stroke" strokeWidth={2.5} opacity={0.9} />
           );
@@ -89,6 +84,8 @@ export function TimelineStrip() {
   const activeId = useAppStore((s) => s.activeUniverseId);
   const scrubPly = useAppStore((s) => s.scrubPly);
   const setScrubPly = useAppStore((s) => s.setScrubPly);
+  const t = useStrings();
+  const c = useChrome();
   const active = tree.universes[activeId];
 
   const stages = useMemo(() => {
@@ -108,7 +105,7 @@ export function TimelineStrip() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Timeline (ply {scrubPly}/{stages.length - 1})</Text>
+      <Text style={[styles.title, { color: c.textDim }]}>{t.timelineTitle(scrubPly, stages.length - 1)}</Text>
       <ScrollView
         horizontal
         contentContainerStyle={{ paddingHorizontal: spacing.md, gap: spacing.sm }}
@@ -119,11 +116,15 @@ export function TimelineStrip() {
             key={i}
             onPress={() => setScrubPly(i)}
             accessibilityRole="button"
-            accessibilityLabel={`Go to ply ${i}`}
+            accessibilityLabel={t.goToPly(i)}
+            accessibilityState={{ selected: i === scrubPly }}
+            testID={`ply.${i}`}
             style={{ alignItems: 'center' }}
           >
-            <MiniBoard board={b} highlighted={i === scrubPly} />
-            <Text style={styles.plyLabel}>{i}</Text>
+            <View style={[styles.ring, { borderColor: i === scrubPly ? c.accent : 'transparent' }]}>
+              <MiniBoard board={b} />
+            </View>
+            <Text style={[styles.plyLabel, { color: c.textDim }]}>{i}</Text>
           </Pressable>
         ))}
       </ScrollView>
@@ -137,21 +138,24 @@ const styles = StyleSheet.create({
   },
   title: {
     ...fonts.label,
-    color: colors.textDim,
     paddingHorizontal: spacing.md,
     marginBottom: spacing.xs,
   },
   mini: {
     width: MINI,
     height: MINI,
-    backgroundColor: colors.bgElev,
+    backgroundColor: game.bgElev,
     borderRadius: radii.sm,
-    borderColor: colors.border,
+    borderColor: game.border,
     borderWidth: 1,
+  },
+  ring: {
+    padding: 2,
+    borderWidth: 2,
+    borderRadius: radii.sm + 4,
   },
   plyLabel: {
     ...fonts.small,
-    color: colors.textDim,
     marginTop: 2,
   },
 });

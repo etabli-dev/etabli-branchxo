@@ -3,7 +3,8 @@ import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { biggestSwingPly } from '../analysis';
 import { useAppStore } from '../state';
-import { colors, fonts, spacing } from '../ui';
+import { useStrings } from '../i18n';
+import { fonts, game, radii, spacing, useChrome } from '../ui';
 
 const W = 320;
 const H = 160;
@@ -16,6 +17,8 @@ export function ProbabilityChart() {
   const tree = useAppStore((s) => s.tree);
   const activeId = useAppStore((s) => s.activeUniverseId);
   const probMode = useAppStore((s) => s.probMode);
+  const t = useStrings();
+  const c = useChrome();
   const active = tree.universes[activeId];
 
   const history = active?.probHistory ?? [];
@@ -47,8 +50,9 @@ export function ProbabilityChart() {
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.title}>Win probability ({probMode === 'perfect' ? 'vs perfect play' : 'vs random play'})</Text>
-      <View style={{ width: W, height: H, backgroundColor: colors.panel, borderRadius: 8 }}>
+      <Text style={[styles.title, { color: c.text }]}>{t.probTitle(probMode === 'perfect')}</Text>
+      <View style={styles.tile}>
+      <View style={{ width: W, height: H }}>
         <Canvas style={{ flex: 1 }}>
           {/* axes */}
           <Group>
@@ -57,7 +61,7 @@ export function ProbabilityChart() {
                 .moveTo(PAD_L, PAD_T)
                 .lineTo(PAD_L, H - PAD_B)
                 .lineTo(W - PAD_R, H - PAD_B).detach()}
-              color={colors.border}
+              color={game.border}
               style="stroke"
               strokeWidth={1}
             />
@@ -67,19 +71,19 @@ export function ProbabilityChart() {
             path={Skia.PathBuilder.Make()
               .moveTo(PAD_L, PAD_T + (H - PAD_T - PAD_B) / 2)
               .lineTo(W - PAD_R, PAD_T + (H - PAD_T - PAD_B) / 2).detach()}
-            color={colors.border}
+            color={game.border}
             style="stroke"
             strokeWidth={0.5}
             opacity={0.6}
           />
           {history.length > 0 && (
             <>
-              <Path path={buildPath(points.pX)} color={colors.markX} style="stroke" strokeWidth={2} />
-              <Path path={buildPath(points.pO)} color={colors.markO} style="stroke" strokeWidth={2} />
-              <Path path={buildPath(points.pD)} color={colors.outcomeDraw} style="stroke" strokeWidth={2} />
+              <Path path={buildPath(points.pX)} color={game.markX} style="stroke" strokeWidth={2} />
+              <Path path={buildPath(points.pO)} color={game.markO} style="stroke" strokeWidth={2} />
+              <Path path={buildPath(points.pD)} color={game.outcomeDraw} style="stroke" strokeWidth={2} />
               {/* dot for each data point so a 1-point history is still visible */}
               {points.x.map((x, i) => (
-                <Circle key={`dot-${i}`} cx={x} cy={points.pX[i] ?? 0} r={2} color={colors.markX} />
+                <Circle key={`dot-${i}`} cx={x} cy={points.pX[i] ?? 0} r={2} color={game.markX} />
               ))}
             </>
           )}
@@ -88,7 +92,7 @@ export function ProbabilityChart() {
             if (i < 0) return null;
             const cx = points.x[i] ?? 0;
             return (
-              <Circle cx={cx} cy={PAD_T + 4} r={4} color={colors.accent} />
+              <Circle cx={cx} cy={PAD_T + 4} r={4} color={game.highlight} />
             );
           })()}
         </Canvas>
@@ -114,10 +118,11 @@ export function ProbabilityChart() {
         <Text style={[styles.yTick, { top: H - PAD_B - 7 }]}>0</Text>
       </View>
       <View style={styles.legendRow}>
-        <Legend color={colors.markX} label="P(X)" />
-        <Legend color={colors.markO} label="P(O)" />
-        <Legend color={colors.outcomeDraw} label="P(draw)" />
-        {swingPly !== null && <Text style={styles.swing}>turning point: ply {swingPly}</Text>}
+        <Legend color={game.markX} label="P(X)" />
+        <Legend color={game.markO} label="P(O)" />
+        <Legend color={game.outcomeDraw} label={t.probDraw} />
+        {swingPly !== null && <Text numberOfLines={1} style={styles.swing}>{t.turningPoint(swingPly)}</Text>}
+      </View>
       </View>
     </View>
   );
@@ -127,27 +132,28 @@ function Legend({ color, label }: { color: string; label: string }) {
   return (
     <View style={styles.legendItem}>
       <View style={{ width: 10, height: 10, backgroundColor: color, borderRadius: 5 }} />
-      <Text style={styles.legendText}>{label}</Text>
+      <Text numberOfLines={1} style={styles.legendText}>{label}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: { padding: spacing.md },
-  title: { ...fonts.label, color: colors.text, marginBottom: spacing.sm },
-  legendRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.sm, flexWrap: 'wrap' },
+  title: { ...fonts.label, marginBottom: spacing.sm },
+  tile: { alignSelf: 'flex-start', backgroundColor: game.panel, borderRadius: radii.md, paddingBottom: spacing.sm },
+  legendRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.md, flexWrap: 'wrap' },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  legendText: { ...fonts.small, color: colors.textDim },
-  swing: { ...fonts.small, color: colors.accent },
+  legendText: { ...fonts.small, color: game.textDim },
+  swing: { ...fonts.small, color: game.highlight },
   tickLabel: {
     position: 'absolute',
-    color: colors.textDim,
+    color: game.textDim,
     fontSize: 10,
   },
   yTick: {
     position: 'absolute',
     left: 6,
-    color: colors.textDim,
+    color: game.textDim,
     fontSize: 10,
   },
 });

@@ -1,31 +1,25 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
-import { colors, fonts, radii, spacing } from './theme';
+import { fonts, radii, spacing } from './theme';
+import { useChrome } from './useChrome';
 
 interface Props {
   readonly label: string;
   readonly active?: boolean;
   readonly onPress?: () => void;
-  readonly tone?: 'neutral' | 'warn' | 'good';
   readonly accessibilityLabel?: string;
 }
 
-export function Pill({ label, active = false, onPress, tone = 'neutral', accessibilityLabel }: Props) {
-  const bg = active
-    ? tone === 'warn'
-      ? colors.outcomeOWin
-      : tone === 'good'
-        ? colors.outcomeXWin
-        : colors.accent
-    : colors.bgElev;
+export function Pill({ label, active = false, onPress, accessibilityLabel }: Props) {
+  const c = useChrome();
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole={onPress ? 'button' : undefined}
       accessibilityLabel={accessibilityLabel ?? label}
-      style={[styles.pill, { backgroundColor: bg }]}
+      style={[styles.pill, { backgroundColor: active ? c.accent : c.surface, borderColor: c.border }]}
     >
-      <Text style={[styles.text, { color: active ? colors.bg : colors.textDim }]}>{label}</Text>
+      <Text numberOfLines={1} style={[styles.text, { color: active ? c.onAccent : c.textDim }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -36,7 +30,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs + 2,
     borderRadius: radii.lg,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   text: {
     ...fonts.small,

@@ -4,8 +4,9 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { CellIndex } from '../game';
 import { fullMoves as canonicalFullMoves } from '../multiverse';
 import { normalizedStrengths, topN } from '../overlay';
+import { useStrings } from '../i18n';
 import { useAppStore } from '../state';
-import { colors, fonts, spacing, viridis } from '../ui';
+import { fonts, game, radii, spacing, useChrome, viridis } from '../ui';
 
 const BOARD_SIZE = 300;
 const CELL = BOARD_SIZE / 3;
@@ -25,6 +26,7 @@ export function BoardView() {
   const attemptPlay = useAppStore((s) => s.attemptPlay);
   const mode = useAppStore((s) => s.mode);
   const aiMark = useAppStore((s) => s.aiMark);
+  const t = useStrings();
 
   const active = tree.universes[activeId];
   const fullMoves = useMemo(
@@ -65,12 +67,13 @@ export function BoardView() {
   const winColor =
     active.status.kind === 'win'
       ? active.status.winner === 'X'
-        ? colors.outcomeXWin
-        : colors.outcomeOWin
-      : colors.outcomeXWin;
+        ? game.outcomeXWin
+        : game.outcomeOWin
+      : game.outcomeXWin;
 
   return (
-    <View accessibilityLabel="Tic-tac-toe board" style={styles.wrap}>
+    <View style={styles.wrap}>
+      <View style={styles.tile} accessibilityLabel={t.boardA11y}>
       <View style={{ width: BOARD_SIZE, height: BOARD_SIZE }}>
         <Canvas style={{ flex: 1 }}>
           {/* heat overlay */}
@@ -97,13 +100,13 @@ export function BoardView() {
               <SkLine
                 p1={vec(i * CELL, 0)}
                 p2={vec(i * CELL, BOARD_SIZE)}
-                color={colors.border}
+                color={game.border}
                 strokeWidth={2}
               />
               <SkLine
                 p1={vec(0, i * CELL)}
                 p2={vec(BOARD_SIZE, i * CELL)}
-                color={colors.border}
+                color={game.border}
                 strokeWidth={2}
               />
             </Group>
@@ -124,7 +127,7 @@ export function BoardView() {
                 <Path
                   key={`m-${idx}`}
                   path={p.detach()}
-                  color={colors.markX}
+                  color={game.markX}
                   style="stroke"
                   strokeWidth={6}
                   strokeCap="round"
@@ -137,7 +140,7 @@ export function BoardView() {
                 cx={x + CELL / 2}
                 cy={y + CELL / 2}
                 r={CELL / 2 - pad}
-                color={colors.markO}
+                color={game.markO}
                 style="stroke"
                 strokeWidth={6}
               />
@@ -154,7 +157,7 @@ export function BoardView() {
                 cx={x + CELL / 2}
                 cy={y + CELL / 2}
                 r={CELL / 2 - 8 - rank * 4}
-                color={colors.accent}
+                color={game.highlight}
                 opacity={0.55 - rank * 0.15}
                 style="stroke"
                 strokeWidth={3}
@@ -185,7 +188,8 @@ export function BoardView() {
               <Pressable
                 key={`hit-${idx}`}
                 accessibilityRole="button"
-                accessibilityLabel={`Cell ${idx + 1}, ${v ?? 'empty'}`}
+                accessibilityLabel={t.cellA11y(idx + 1, v ?? null)}
+                testID={`cell.${idx}`}
                 accessibilityState={{ disabled: occupied && atTip }}
                 style={{ position: 'absolute', left: x, top: y, width: CELL, height: CELL }}
                 onPress={() => attemptPlay(idx as CellIndex)}
@@ -193,6 +197,7 @@ export function BoardView() {
             );
           })}
         </View>
+      </View>
       </View>
 
       <BoardStatusLine />
@@ -205,18 +210,20 @@ function BoardStatusLine() {
   const activeId = useAppStore((s) => s.activeUniverseId);
   const aiThinking = useAppStore((s) => s.aiThinking);
   const scrubPly = useAppStore((s) => s.scrubPly);
+  const t = useStrings();
+  const c = useChrome();
   const u = tree.universes[activeId];
   if (!u) return null;
   const moves = canonicalFullMoves(tree, activeId);
   const atTip = scrubPly === moves.length;
   let label = '';
-  if (!atTip) label = `viewing ply ${scrubPly} (scrubbed)`;
-  else if (u.status.kind === 'win') label = `${u.status.winner} wins`;
-  else if (u.status.kind === 'draw') label = 'Draw';
-  else label = `${u.status.toMove} to move${aiThinking ? ' • thinking…' : ''}`;
+  if (!atTip) label = t.statusScrubbed(scrubPly);
+  else if (u.status.kind === 'win') label = t.wins(u.status.winner);
+  else if (u.status.kind === 'draw') label = t.draw;
+  else label = `${t.toMove(u.status.toMove)}${aiThinking ? t.thinking : ''}`;
   return (
     <View style={styles.statusWrap}>
-      <Text style={styles.status} accessibilityLiveRegion="polite">{label}</Text>
+      <Text style={[styles.status, { color: c.text }]} accessibilityLiveRegion="polite">{label}</Text>
     </View>
   );
 }
@@ -226,11 +233,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.md,
   },
+  tile: {
+    padding: spacing.sm,
+    borderRadius: radii.md,
+    backgroundColor: game.bg,
+    borderWidth: 1,
+    borderColor: game.border,
+  },
   statusWrap: {
     marginTop: spacing.md,
   },
   status: {
     ...fonts.label,
-    color: colors.text,
   },
 });

@@ -4,7 +4,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import { CellIndex } from '../game';
 import { normalizedStrengths } from '../overlay';
 import { useAppStore } from '../state';
-import { colors, fonts, radii, spacing, viridis } from '../ui';
+import { useStrings } from '../i18n';
+import { fonts, game, radii, spacing, useChrome, viridis } from '../ui';
 
 const SIZE = 280;
 const CELL = SIZE / 3;
@@ -12,6 +13,8 @@ const CELL = SIZE / 3;
 export function HeatView() {
   const tree = useAppStore((s) => s.tree);
   const activeId = useAppStore((s) => s.activeUniverseId);
+  const t = useStrings();
+  const c = useChrome();
   const active = tree.universes[activeId];
 
   const scores = useMemo(() => {
@@ -23,7 +26,8 @@ export function HeatView() {
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.title}>Strength heat (active board)</Text>
+      <Text style={[styles.title, { color: c.text }]}>{t.heatTitle}</Text>
+      <View style={styles.tile}>
       <View style={{ width: SIZE, height: SIZE }}>
         <Canvas style={{ flex: 1 }}>
           {/* base cells */}
@@ -33,7 +37,7 @@ export function HeatView() {
             const x = col * CELL;
             const y = row * CELL;
             const entry = scores.find((s) => (s.cell as CellIndex) === (idx as CellIndex));
-            const fill = entry ? viridis(entry.norm) : colors.panel;
+            const fill = entry ? viridis(entry.norm) : game.panel;
             const opacity = entry ? 0.55 + entry.norm * 0.4 : 0.6;
             return (
               <Group key={idx}>
@@ -50,13 +54,13 @@ export function HeatView() {
             <Group key={i}>
               <Path
                 path={Skia.PathBuilder.Make().moveTo(i * CELL, 0).lineTo(i * CELL, SIZE).detach()}
-                color={colors.border}
+                color={game.border}
                 style="stroke"
                 strokeWidth={2}
               />
               <Path
                 path={Skia.PathBuilder.Make().moveTo(0, i * CELL).lineTo(SIZE, i * CELL).detach()}
-                color={colors.border}
+                color={game.border}
                 style="stroke"
                 strokeWidth={2}
               />
@@ -83,19 +87,19 @@ export function HeatView() {
           );
         })}
       </View>
-      <Text style={styles.legend}>
-        viridis · darker = weaker · ★ = immediate win · ◆ = immediate block
-      </Text>
+      </View>
+      <Text style={[styles.legend, { color: c.textDim }]}>{t.heatLegend}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: { padding: spacing.md, alignItems: 'center' },
-  title: { ...fonts.label, color: colors.text, marginBottom: spacing.sm },
+  title: { ...fonts.label, marginBottom: spacing.sm },
+  tile: { padding: spacing.sm, borderRadius: radii.md, backgroundColor: game.bg, borderWidth: 1, borderColor: game.border },
   scoreLabel: {
     position: 'absolute',
-    color: colors.text,
+    color: game.text,
     fontSize: 11,
     fontWeight: '700',
     backgroundColor: 'rgba(0,0,0,0.35)',
@@ -103,5 +107,5 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: radii.sm,
   },
-  legend: { ...fonts.small, color: colors.textDim, marginTop: spacing.sm },
+  legend: { ...fonts.small, marginTop: spacing.sm, textAlign: 'center' },
 });
